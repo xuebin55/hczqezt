@@ -1,0 +1,5 @@
+{
+  "name": "财富管理 agent1",
+  "description": "AI原生的证券公司APP，通过智能体主动为客户提供买产品、炒股票、找投顾服务。",
+  "requestFramePermissions": []
+}

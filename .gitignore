@@ -1,0 +1,26 @@
+node_modules/
+build/
+dist/
+coverage/
+.DS_Store
+*.log
+.env*
+!.env.example
+
+# Vite / TS cache
+.vite/
+*.tsbuildinfo
+
+# Editor / IDE
+.idea/
+.vscode/
+.cursor/
+
+# Cursor / local transcripts and temp artifacts
+.specstory/
+agent-transcripts/
+
+# OS / misc
+Thumbs.db
+*.swp
+*.swo
