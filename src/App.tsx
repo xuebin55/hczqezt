@@ -43,6 +43,7 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   Flame,
+  Sprout,
   ChevronDown,
   ChevronUp,
   HelpCircle,
@@ -60,9 +61,6 @@ import {
 
 // 直接引用「头像」文件夹里的投顾猎头头像，打包后带哈希 URL 可避免缓存旧图
 import 投顾猎头头像 from '../头像/投顾猎头头像.png';
-// 投顾猎头匹配结果页 - 李华/赵金胜卡片大图
-import 李华大照片 from '../投资顾问照片/李华大照片.png';
-import 赵金胜大照片 from '../投资顾问照片/赵金胜大照片.png';
 // 投顾个人页顶部小头像
 import 李华小头像 from '../投资顾问照片/李华小头像.png';
 import 赵金胜小头像 from '../投资顾问照片/赵金胜小头像.png';
@@ -85,6 +83,98 @@ interface AdvisorProfileData {
   tags: string[];
   company: string;
   articles: { title: string; views: string; likes: string; image: string; isVideo?: boolean }[];
+}
+
+type ThinkingStep = {
+  title: string;
+  desc: React.ReactNode;
+  icon: React.ReactNode;
+};
+
+function ThinkingProcessCard({ steps, step, completed }: { steps: ThinkingStep[]; step: number; completed: boolean }) {
+  const [expanded, setExpanded] = useState(!completed);
+
+  React.useEffect(() => {
+    setExpanded(!completed);
+  }, [completed]);
+
+  const currentStep = Math.min(step + 1, steps.length);
+
+  return (
+    <div className="bg-slate-800/60 backdrop-blur-xl rounded-3xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.3)] relative overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setExpanded(value => !value)}
+        className="w-full px-5 py-4 flex items-center justify-between gap-3 text-left"
+      >
+        <div className="flex items-center gap-2 min-w-0">
+          <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 border ${
+            completed
+              ? 'bg-blue-500/15 border-blue-500/30 text-blue-300'
+              : 'bg-blue-600/20 border-blue-500/40 text-blue-300'
+          }`}>
+            {completed ? <CheckCircle2 className="w-4 h-4" /> : <Loader2 className="w-4 h-4 animate-spin" />}
+          </div>
+          <div className="min-w-0">
+            <div className="text-sm font-bold text-slate-100">思考过程</div>
+            <div className="text-[11px] text-slate-500 mt-0.5">
+              {completed ? `已完成 ${steps.length} 个步骤` : `正在分析 ${currentStep}/${steps.length}`}
+            </div>
+          </div>
+        </div>
+        <ChevronDown className={`w-4 h-4 text-slate-400 shrink-0 transition-transform ${expanded ? 'rotate-180' : ''}`} />
+      </button>
+
+      <AnimatePresence initial={false}>
+        {expanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.22, ease: 'easeOut' }}
+            className="overflow-hidden"
+          >
+            <div className="px-5 pb-5 pt-1">
+              <div className="space-y-4 relative">
+                <div className="absolute left-[15px] top-4 bottom-4 w-0.5 bg-slate-700/50 z-0" />
+
+                {steps.map((s, i) => {
+                  const isActive = i === step;
+                  const isCompleted = i < step;
+                  if (i > step) return null;
+
+                  return (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="relative z-10 flex gap-4"
+                    >
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 border-2 ${
+                        isCompleted ? 'bg-blue-500/20 border-blue-500/50 text-blue-400' :
+                        isActive ? 'bg-blue-600 border-blue-400 text-white shadow-[0_0_15px_rgba(37,99,235,0.5)]' :
+                        'bg-slate-800 border-slate-600 text-slate-500'
+                      }`}>
+                        {isActive ? <Loader2 className="w-4 h-4 animate-spin" /> : s.icon}
+                      </div>
+                      <div className="flex-1 pt-1">
+                        <div className={`text-sm font-bold flex items-center justify-between ${isActive ? 'text-blue-400' : isCompleted ? 'text-slate-200' : 'text-slate-500'}`}>
+                          <span>{s.title}</span>
+                        </div>
+                        <div className={`mt-1 leading-relaxed ${isActive ? 'text-slate-300' : isCompleted ? 'text-slate-400' : 'text-slate-600'}`}>
+                          {s.desc}
+                        </div>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
 }
 
 const ADVISOR_PROFILES: Record<string, AdvisorProfileData> = {
@@ -149,7 +239,7 @@ function TypewriterText({ text }: { text: string, key?: string }) {
       } else {
         clearInterval(timer);
       }
-    }, 50);
+    }, 20);
     return () => clearInterval(timer);
   }, [text]);
 
@@ -1057,8 +1147,7 @@ function HomeView({ onAgentClick, onTradeClick, onBuyClick, onWatchlistClick, on
               <div className="mt-4 relative z-10 flex justify-center">
                 <button 
                   onClick={() => {
-                    setCurrentView('guide');
-                    setActiveAgent('quant');
+                    onAgentClick('quant');
                   }}
                   className="w-[70%] h-[42px] rounded-full bg-blue-500/15 hover:bg-blue-500/25 text-blue-100 border border-blue-500/30 backdrop-blur-md flex items-center justify-center gap-2 transition-all active:scale-95 group shadow-[0_4px_20px_rgba(59,130,246,0.15)]"
                 >
@@ -1725,7 +1814,7 @@ function QuantTaskOrchestration({ modelName }: { modelName: string }) {
     if (step < steps.length) {
       const timer = setTimeout(() => {
         setStep(s => s + 1);
-      }, 1500);
+      }, 700);
       return () => clearTimeout(timer);
     }
   }, [step, steps.length]);
@@ -1811,68 +1900,51 @@ function QuantTaskOrchestration({ modelName }: { modelName: string }) {
   );
 }
 
-/** 炒股参谋-对话页「事件驱动模型」：针对多个重要事件的选股流程。与引导页的单一事件（钨矿涨价）不同，这里展示所有热门事件。 */
-function EventDrivenFlowView({ onComplete, onBuyClick }: { onComplete?: () => void; onBuyClick?: () => void }) {
+/** 炒股参谋-对话页「成长股模型」：行业景气轮动 + 个股优选的成长股选股流程。 */
+function GrowthStockFlowView({ onComplete, onBuyClick, onQuestionClick }: { onComplete?: () => void; onBuyClick?: () => void; onQuestionClick?: (question: string) => void }) {
   const [step, setStep] = useState(0);
   const completedRef = React.useRef(false);
   const [expandedSectors, setExpandedSectors] = useState(false);
 
   const steps: { title: string; desc: React.ReactNode; icon: React.ReactNode; editable?: boolean }[] = [
     {
-      title: '确定事件类型与事件池',
+      title: '行业景气度筛选',
       desc: (
         <div className="space-y-2">
-          <div className="text-xs font-medium text-blue-400 mb-1.5">已识别 9 个重要事件</div>
-          
+          <div className="text-xs font-medium text-blue-400 mb-1.5">锁定 5 条高景气成长产业</div>
           <div className="space-y-1">
             <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="px-1.5 py-0.5 bg-blue-500/20 border border-blue-500/30 rounded text-blue-400 text-[10px] font-bold">宏观</span>
-              <span className="text-[11px] text-slate-400">央行降准降息，市场流动性改善</span>
+              <span className="px-1.5 py-0.5 bg-indigo-500/20 border border-indigo-500/30 rounded text-indigo-400 text-[10px] font-bold">高景气</span>
+              <span className="text-[11px] text-slate-400">AI 算力 · 利润增速中位数 +42%，指数站上 MA60</span>
             </div>
             <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="px-1.5 py-0.5 bg-blue-500/20 border border-blue-500/30 rounded text-blue-400 text-[10px] font-bold">宏观</span>
-              <span className="text-[11px] text-slate-400">新"国九条"发布，资本市场改革提速</span>
+              <span className="px-1.5 py-0.5 bg-indigo-500/20 border border-indigo-500/30 rounded text-indigo-400 text-[10px] font-bold">高景气</span>
+              <span className="text-[11px] text-slate-400">半导体设备 · 国产替代加速，营收增速 +38%</span>
             </div>
             <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="px-1.5 py-0.5 bg-blue-500/20 border border-blue-500/30 rounded text-blue-400 text-[10px] font-bold">宏观</span>
-              <span className="text-[11px] text-slate-400">科创板做市商制度优化</span>
+              <span className="px-1.5 py-0.5 bg-indigo-500/20 border border-indigo-500/30 rounded text-indigo-400 text-[10px] font-bold">高景气</span>
+              <span className="text-[11px] text-slate-400">新能源车 · 出海订单回暖，龙头份额提升</span>
             </div>
             <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="px-1.5 py-0.5 bg-emerald-500/20 border border-emerald-500/30 rounded text-emerald-400 text-[10px] font-bold">行业</span>
-              <span className="text-[11px] text-slate-400">AI 大模型持续突破，算力需求激增</span>
+              <span className="px-1.5 py-0.5 bg-emerald-500/20 border border-emerald-500/30 rounded text-emerald-400 text-[10px] font-bold">回升</span>
+              <span className="text-[11px] text-slate-400">创新药 · 管线催化密集，景气得分回升</span>
             </div>
             <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="px-1.5 py-0.5 bg-emerald-500/20 border border-emerald-500/30 rounded text-emerald-400 text-[10px] font-bold">行业</span>
-              <span className="text-[11px] text-slate-400">钨矿价格持续上涨</span>
-            </div>
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="px-1.5 py-0.5 bg-emerald-500/20 border border-emerald-500/30 rounded text-emerald-400 text-[10px] font-bold">行业</span>
-              <span className="text-[11px] text-slate-400">半导体设备国产化替代加速</span>
-            </div>
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="px-1.5 py-0.5 bg-emerald-500/20 border border-emerald-500/30 rounded text-emerald-400 text-[10px] font-bold">行业</span>
-              <span className="text-[11px] text-slate-400">新能源车出海订单大幅增长</span>
-            </div>
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="px-1.5 py-0.5 bg-amber-500/20 border border-amber-500/30 rounded text-amber-400 text-[10px] font-bold">个股</span>
-              <span className="text-[11px] text-slate-400">某头部药企创新药获FDA批准上市</span>
-            </div>
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="px-1.5 py-0.5 bg-amber-500/20 border border-amber-500/30 rounded text-amber-400 text-[10px] font-bold">个股</span>
-              <span className="text-[11px] text-slate-400">某光伏龙头签订百亿海外订单</span>
+              <span className="px-1.5 py-0.5 bg-emerald-500/20 border border-emerald-500/30 rounded text-emerald-400 text-[10px] font-bold">回升</span>
+              <span className="text-[11px] text-slate-400">军工电子 · 订单能见度改善，业绩加速</span>
             </div>
           </div>
         </div>
       ),
-      icon: <Zap className="w-4 h-4" />,
+      icon: <Sprout className="w-4 h-4" />,
       editable: true,
     },
     {
-      title: '事件影响分析',
+      title: '成长产业龙头锁定',
       desc: (
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <div className="text-xs text-blue-400 font-medium">锁定 15 个利好板块</div>
+            <div className="text-xs text-blue-400 font-medium">优选 12 个细分产业龙头池</div>
             <button 
               onClick={() => setExpandedSectors(!expandedSectors)}
               className="text-[10px] text-slate-400 hover:text-blue-400 transition-colors flex items-center gap-1"
@@ -1889,53 +1961,37 @@ function EventDrivenFlowView({ onComplete, onBuyClick }: { onComplete?: () => vo
               className="space-y-2 pt-1"
             >
               <div className="space-y-1.5">
-                <div className="text-[10px] text-slate-500 font-medium">AI算力事件 → 利好板块：</div>
+                <div className="text-[10px] text-slate-500 font-medium">AI 算力产业 → 龙头方向：</div>
                 <div className="flex flex-wrap gap-1.5 pl-2">
                   <span className="px-2 py-0.5 bg-red-500/15 border border-red-500/25 rounded text-red-400 text-[10px]">光模块</span>
-                  <span className="px-2 py-0.5 bg-red-500/15 border border-red-500/25 rounded text-red-400 text-[10px]">AI芯片</span>
-                  <span className="px-2 py-0.5 bg-red-500/15 border border-red-500/25 rounded text-red-400 text-[10px]">算力服务</span>
+                  <span className="px-2 py-0.5 bg-red-500/15 border border-red-500/25 rounded text-red-400 text-[10px]">AI 芯片</span>
+                  <span className="px-2 py-0.5 bg-red-500/15 border border-red-500/25 rounded text-red-400 text-[10px]">服务器</span>
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <div className="text-[10px] text-slate-500 font-medium">新能源出海事件 → 利好板块：</div>
+                <div className="text-[10px] text-slate-500 font-medium">半导体设备产业 → 龙头方向：</div>
                 <div className="flex flex-wrap gap-1.5 pl-2">
-                  <span className="px-2 py-0.5 bg-red-500/15 border border-red-500/25 rounded text-red-400 text-[10px]">新能源整车</span>
+                  <span className="px-2 py-0.5 bg-red-500/15 border border-red-500/25 rounded text-red-400 text-[10px]">刻蚀设备</span>
+                  <span className="px-2 py-0.5 bg-red-500/15 border border-red-500/25 rounded text-red-400 text-[10px]">薄膜沉积</span>
+                  <span className="px-2 py-0.5 bg-red-500/15 border border-red-500/25 rounded text-red-400 text-[10px]">检测设备</span>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <div className="text-[10px] text-slate-500 font-medium">新能源车产业 → 龙头方向：</div>
+                <div className="flex flex-wrap gap-1.5 pl-2">
+                  <span className="px-2 py-0.5 bg-red-500/15 border border-red-500/25 rounded text-red-400 text-[10px]">整车龙头</span>
                   <span className="px-2 py-0.5 bg-red-500/15 border border-red-500/25 rounded text-red-400 text-[10px]">动力电池</span>
-                  <span className="px-2 py-0.5 bg-red-500/15 border border-red-500/25 rounded text-red-400 text-[10px]">汽车零部件</span>
+                  <span className="px-2 py-0.5 bg-red-500/15 border border-red-500/25 rounded text-red-400 text-[10px]">热管理</span>
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <div className="text-[10px] text-slate-500 font-medium">半导体国产化事件 → 利好板块：</div>
+                <div className="text-[10px] text-slate-500 font-medium">创新药产业 → 龙头方向：</div>
                 <div className="flex flex-wrap gap-1.5 pl-2">
-                  <span className="px-2 py-0.5 bg-red-500/15 border border-red-500/25 rounded text-red-400 text-[10px]">半导体设备</span>
-                  <span className="px-2 py-0.5 bg-red-500/15 border border-red-500/25 rounded text-red-400 text-[10px]">半导体材料</span>
-                  <span className="px-2 py-0.5 bg-red-500/15 border border-red-500/25 rounded text-red-400 text-[10px]">芯片设计</span>
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <div className="text-[10px] text-slate-500 font-medium">钨矿涨价事件 → 利好板块：</div>
-                <div className="flex flex-wrap gap-1.5 pl-2">
-                  <span className="px-2 py-0.5 bg-red-500/15 border border-red-500/25 rounded text-red-400 text-[10px]">稀有金属</span>
-                  <span className="px-2 py-0.5 bg-red-500/15 border border-red-500/25 rounded text-red-400 text-[10px]">硬质合金</span>
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <div className="text-[10px] text-slate-500 font-medium">创新药获批事件 → 利好板块：</div>
-                <div className="flex flex-wrap gap-1.5 pl-2">
-                  <span className="px-2 py-0.5 bg-red-500/15 border border-red-500/25 rounded text-red-400 text-[10px]">创新药</span>
-                  <span className="px-2 py-0.5 bg-red-500/15 border border-red-500/25 rounded text-red-400 text-[10px]">医疗器械</span>
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <div className="text-[10px] text-slate-500 font-medium">光伏大单事件 → 利好板块：</div>
-                <div className="flex flex-wrap gap-1.5 pl-2">
-                  <span className="px-2 py-0.5 bg-red-500/15 border border-red-500/25 rounded text-red-400 text-[10px]">光伏设备</span>
-                  <span className="px-2 py-0.5 bg-red-500/15 border border-red-500/25 rounded text-red-400 text-[10px]">光伏组件</span>
+                  <span className="px-2 py-0.5 bg-red-500/15 border border-red-500/25 rounded text-red-400 text-[10px]">ADC 药物</span>
+                  <span className="px-2 py-0.5 bg-red-500/15 border border-red-500/25 rounded text-red-400 text-[10px]">双抗</span>
                 </div>
               </div>
             </motion.div>
@@ -1946,11 +2002,12 @@ function EventDrivenFlowView({ onComplete, onBuyClick }: { onComplete?: () => vo
       editable: true,
     },
     {
-      title: '受益标的初筛',
+      title: '成长股初筛',
       desc: (
         <div className="space-y-1">
-          <div className="text-xs text-slate-400">• 事件相关度最高前 100 名</div>
-          <div className="text-xs text-slate-400">• 分析师推荐次数最高前 100 名</div>
+          <div className="text-xs text-slate-400">• 扣非净利润增速 &gt; 行业均值 1.5 倍</div>
+          <div className="text-xs text-slate-400">• 连续 2 季度业绩加速</div>
+          <div className="text-xs text-slate-400">• 细分产业市值 / 营收排名前 20%</div>
         </div>
       ),
       icon: <Filter className="w-4 h-4" />,
@@ -1961,9 +2018,9 @@ function EventDrivenFlowView({ onComplete, onBuyClick }: { onComplete?: () => vo
       desc: (
         <div className="space-y-1">
           <div className="text-xs text-slate-400">• 非 ST 股票</div>
-          <div className="text-xs text-slate-400">• 未来三月十大股东无减持计划</div>
-          <div className="text-xs text-slate-400">• 资产负债率 &lt; 70%</div>
-          <div className="text-xs text-slate-400">• 近一年无重大违规处罚</div>
+          <div className="text-xs text-slate-400">• 大股东质押率 &lt; 50%</div>
+          <div className="text-xs text-slate-400">• 商誉 / 净资产 &lt; 30%</div>
+          <div className="text-xs text-slate-400">• 流通市值 ≥ 50 亿</div>
           <div className="text-xs text-slate-400">• 经营现金流连续两年为正</div>
         </div>
       ),
@@ -1971,12 +2028,13 @@ function EventDrivenFlowView({ onComplete, onBuyClick }: { onComplete?: () => vo
       editable: true,
     },
     {
-      title: '技术面过滤与择时',
+      title: '成长性与择时确认',
       desc: (
         <div className="space-y-1">
-          <div className="text-xs text-slate-400">趋势跟随模型：<span className="text-red-400 font-medium">趋势看多</span></div>
-          <div className="text-xs text-slate-400">短线强势模型：<span className="text-red-400 font-medium">短线强势</span></div>
-          <div className="text-xs text-blue-400 font-medium mt-1">最终精选 3 只多事件受益标的</div>
+          <div className="text-xs text-slate-400">PE 估值 &lt; 行业中位数 × 1.3</div>
+          <div className="text-xs text-slate-400">ROE &gt; 行业中位数且 &gt; 5%</div>
+          <div className="text-xs text-slate-400">股价站上 MA60，近 20 日趋势向上</div>
+          <div className="text-xs text-blue-400 font-medium mt-1">最终精选 3 只高景气成长股</div>
         </div>
       ),
       icon: <TrendingUp className="w-4 h-4" />,
@@ -1986,7 +2044,7 @@ function EventDrivenFlowView({ onComplete, onBuyClick }: { onComplete?: () => vo
 
   React.useEffect(() => {
     if (step < steps.length) {
-      const t = setTimeout(() => setStep(s => s + 1), 2000);
+      const t = setTimeout(() => setStep(s => s + 1), 700);
       return () => clearTimeout(t);
     }
   }, [step, steps.length]);
@@ -2000,100 +2058,62 @@ function EventDrivenFlowView({ onComplete, onBuyClick }: { onComplete?: () => vo
 
   const allStepsCompleted = step >= steps.length;
 
-  // 选股结果：展示 3 只受益于多个事件的股票
+  const suggestedQuestions = [
+    '继续筛选研发费用TTM连续3年递增的股票',
+    '继续筛选研发占比超行业均值的股票',
+    '继续筛选营收增速和利润增速均处行业前30%的股票',
+  ];
+
+  // 选股结果：展示 3 只高景气成长股
   const resultStocks: {
     name: string;
     code: string;
-    events: string[];
     reason: string;
     price: string;
     change: string;
     changeUp: boolean;
     recentGain: string;
     valuation: string;
-    eventCount: string;
+    growthScore: string;
   }[] = [
     { 
       name: '中际旭创', 
       code: '300308', 
-      events: ['AI 大模型持续突破，算力需求激增', '半导体设备国产化替代加速'], 
-      reason: '光模块龙头企业，受益于AI大模型训练对高速光模块需求的爆发式增长，同时国产替代加速推动市场份额持续提升，订单饱满业绩高增长预期强烈。', 
+      reason: '经营现金流：2025Q1 为 18.6 亿元；利润增速：2025Q1 扣非净利润同比 +85%。', 
       price: '86.42', 
       change: '+3.21%', 
       changeUp: true,
       recentGain: '近5日 +12.8%',
       valuation: 'PE 35.2',
-      eventCount: '2个'
+      growthScore: '9.2分'
     },
     { 
-      name: '寒武纪', 
-      code: '688256', 
-      events: ['AI 大模型持续突破，算力需求激增', '央行降准降息，市场流动性改善'], 
-      reason: 'AI芯片核心标的，公司云端智能芯片在大模型训练领域竞争力突出，市场需求持续扩张。央行降准改善流动性环境，利好高成长科技股估值修复。', 
-      price: '68.50', 
-      change: '+5.67%', 
+      name: '北方华创', 
+      code: '002371', 
+      reason: '营收增速：2025Q1 营业收入同比 +38%；利润增速：2025Q1 扣非净利润同比 +42%。', 
+      price: '312.60', 
+      change: '+2.48%', 
       changeUp: true,
-      recentGain: '近5日 +18.3%',
-      valuation: 'PS 8.6',
-      eventCount: '2个'
+      recentGain: '近5日 +8.6%',
+      valuation: 'PE 42.5',
+      growthScore: '8.8分'
     },
     { 
-      name: '比亚迪', 
-      code: '002594', 
-      events: ['新能源车出海订单大幅增长', '新"国九条"发布，资本市场改革提速'], 
-      reason: '新能源汽车全球化龙头，海外市场订单持续高速增长，品牌力与产品竞争力持续增强。"国九条"政策利好优质蓝筹股，推动公司估值重估。', 
-      price: '228.80', 
-      change: '+2.15%', 
+      name: '宁德时代', 
+      code: '300750', 
+      reason: '经营现金流：2025Q1 为 126.4 亿元；营收增速：2025Q1 营业收入同比 +18%。', 
+      price: '198.50', 
+      change: '+1.86%', 
       changeUp: true,
-      recentGain: '近5日 +6.7%',
+      recentGain: '近5日 +5.2%',
       valuation: 'PE 22.8',
-      eventCount: '2个'
+      growthScore: '8.5分'
     },
   ];
 
   return (
     <>
-      <div className="bg-slate-800/60 backdrop-blur-xl rounded-3xl p-5 border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.3)] relative overflow-hidden">
-        <div className="space-y-4 relative">
-          <div className="absolute left-[15px] top-4 bottom-4 w-0.5 bg-slate-700/50 z-0" />
-
-          {steps.map((s, i) => {
-            const isActive = i === step;
-            const isCompleted = i < step;
-            if (i > step) return null;
-
-            return (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="relative z-10 flex gap-4"
-              >
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 border-2 ${
-                  isCompleted ? 'bg-blue-500/20 border-blue-500/50 text-blue-400' :
-                  isActive ? 'bg-blue-600 border-blue-400 text-white shadow-[0_0_15px_rgba(37,99,235,0.5)]' :
-                  'bg-slate-800 border-slate-600 text-slate-500'
-                }`}>
-                  {isActive ? <Loader2 className="w-4 h-4 animate-spin" /> : s.icon}
-                </div>
-                <div className="flex-1 pt-1">
-                  <div className={`text-sm font-bold flex items-center justify-between ${isActive ? 'text-blue-400' : isCompleted ? 'text-slate-200' : 'text-slate-500'}`}>
-                    <span>{s.title}</span>
-                    {s.editable && isCompleted && (
-                      <button className="text-[10px] text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 px-2 py-0.5 rounded border border-blue-500/30 transition-colors flex items-center gap-1">
-                        <span>修改</span>
-                      </button>
-                    )}
-                  </div>
-                  <div className={`mt-1 leading-relaxed ${isActive ? 'text-slate-300' : isCompleted ? 'text-slate-400' : 'text-slate-600'}`}>
-                    {s.desc}
-                  </div>
-                </div>
-              </motion.div>
-            );
-          })}
-        </div>
-      </div>
+      <ThinkingProcessCard steps={steps} step={step} completed={allStepsCompleted} />
 
       {allStepsCompleted && (
         <>
@@ -2146,22 +2166,9 @@ function EventDrivenFlowView({ onComplete, onBuyClick }: { onComplete?: () => vo
                 <div className="w-px h-7 bg-slate-700/50" />
                 <div className="text-center flex-1">
                   <div className="text-base font-bold text-slate-300 tabular-nums">
-                    {stock.eventCount}
+                    {stock.growthScore}
                   </div>
-                  <div className="text-[10px] text-slate-500 mt-0.5">关联事件</div>
-                </div>
-              </div>
-
-              {/* 受益事件列表 */}
-              <div className="mb-3 relative z-10">
-                <div className="text-[10px] text-slate-500 mb-1.5">受益事件：</div>
-                <div className="space-y-1">
-                  {stock.events.map((event, i) => (
-                    <div key={i} className="flex items-start gap-1.5">
-                      <div className="w-1 h-1 rounded-full bg-amber-400 mt-1.5 shrink-0" />
-                      <span className="text-[11px] text-slate-400 leading-snug">{event}</span>
-                    </div>
-                  ))}
+                  <div className="text-[10px] text-slate-500 mt-0.5">成长评分</div>
                 </div>
               </div>
 
@@ -2184,30 +2191,7 @@ function EventDrivenFlowView({ onComplete, onBuyClick }: { onComplete?: () => vo
             ))}
           </motion.div>
 
-          {/* 提示词按钮 */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="space-y-3 mt-4"
-          >
-            {[
-              '批量买入',
-              '加入自选股',
-              '增加筛选条件'
-            ].map((text, i) => (
-              <button 
-                key={i} 
-                className="w-full text-left bg-slate-800/60 backdrop-blur-xl hover:bg-slate-700/80 border border-white/10 hover:border-blue-500/30 rounded-2xl p-4 flex items-center justify-between transition-all group shadow-md"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-7 h-7 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center text-sm font-bold shrink-0 shadow-inner">#</div>
-                  <span className="text-sm text-slate-200 group-hover:text-white leading-snug font-medium">{text}</span>
-                </div>
-                <ArrowRight className="w-4 h-4 text-slate-500 group-hover:text-blue-400 shrink-0" />
-              </button>
-            ))}
-          </motion.div>
+          <ModelSuggestedQuestions questions={suggestedQuestions} onQuestionClick={onQuestionClick} />
         </>
       )}
     </>
@@ -2326,7 +2310,7 @@ function TrendFollowingFlowView({ onComplete, onBuyClick, onAddToWatchlist }: { 
 
   React.useEffect(() => {
     if (step < steps.length) {
-      const t = setTimeout(() => setStep(s => s + 1), 2000);
+      const t = setTimeout(() => setStep(s => s + 1), 700);
       return () => clearTimeout(t);
     }
   }, [step, steps.length]);
@@ -2445,47 +2429,7 @@ function TrendFollowingFlowView({ onComplete, onBuyClick, onAddToWatchlist }: { 
 
   return (
     <>
-      <div className="bg-slate-800/60 backdrop-blur-xl rounded-3xl p-5 border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.3)] relative overflow-hidden">
-        <div className="space-y-4 relative">
-          <div className="absolute left-[15px] top-4 bottom-4 w-0.5 bg-slate-700/50 z-0" />
-
-          {steps.map((s, i) => {
-            const isActive = i === step;
-            const isCompleted = i < step;
-            if (i > step) return null;
-
-            return (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="relative z-10 flex gap-4"
-              >
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 border-2 ${
-                  isCompleted ? 'bg-blue-500/20 border-blue-500/50 text-blue-400' :
-                  isActive ? 'bg-blue-600 border-blue-400 text-white shadow-[0_0_15px_rgba(37,99,235,0.5)]' :
-                  'bg-slate-800 border-slate-600 text-slate-500'
-                }`}>
-                  {isActive ? <Loader2 className="w-4 h-4 animate-spin" /> : s.icon}
-                </div>
-                <div className="flex-1 pt-1">
-                  <div className={`text-sm font-bold flex items-center justify-between ${isActive ? 'text-blue-400' : isCompleted ? 'text-slate-200' : 'text-slate-500'}`}>
-                    <span>{s.title}</span>
-                    {s.editable && isCompleted && (
-                      <button className="text-[10px] text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 px-2 py-0.5 rounded border border-blue-500/30 transition-colors flex items-center gap-1">
-                        <span>修改</span>
-                      </button>
-                    )}
-                  </div>
-                  <div className={`mt-1 leading-relaxed ${isActive ? 'text-slate-300' : isCompleted ? 'text-slate-400' : 'text-slate-600'}`}>
-                    {s.desc}
-                  </div>
-                </div>
-              </motion.div>
-            );
-          })}
-        </div>
-      </div>
+      <ThinkingProcessCard steps={steps} step={step} completed={allStepsCompleted} />
 
       {allStepsCompleted && (
         <>
@@ -2584,41 +2528,257 @@ function TrendFollowingFlowView({ onComplete, onBuyClick, onAddToWatchlist }: { 
               </div>
             ))}
           </motion.div>
-
-          {/* 提示词按钮 */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="space-y-3 mt-4"
-          >
-            {[
-              '批量买入',
-              '加入自选股',
-              '增加筛选条件'
-            ].map((text, i) => (
-              <button 
-                key={i}
-                onClick={() => text === '加入自选股' && onAddToWatchlist?.()}
-                className="w-full text-left bg-slate-800/60 backdrop-blur-xl hover:bg-slate-700/80 border border-white/10 hover:border-blue-500/30 rounded-2xl p-4 flex items-center justify-between transition-all group shadow-md"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-7 h-7 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center text-sm font-bold shrink-0 shadow-inner">#</div>
-                  <span className="text-sm text-slate-200 group-hover:text-white leading-snug font-medium">{text}</span>
-                </div>
-                <ArrowRight className="w-4 h-4 text-slate-500 group-hover:text-blue-400 shrink-0" />
-              </button>
-            ))}
-          </motion.div>
         </>
       )}
     </>
   );
 }
 
+type MetricStock = {
+  name: string;
+  code: string;
+  price: string;
+  change: string;
+  changeUp: boolean;
+  industry?: string;
+  industryChange?: string;
+  industryMomentum?: string;
+  stockFactors?: { label: string; value: string }[];
+  reasonFacts?: string[];
+  detailReasonText?: string;
+  detailReasonFactors?: { label: string; value: string }[];
+  detailReasonFacts?: string[];
+  metrics: { label: string; value: string; tone?: 'blue' | 'red' | 'emerald' | 'amber' }[];
+  reason: string;
+};
+
+type MetricModelConfig = {
+  title: string;
+  accent: 'blue' | 'indigo' | 'cyan' | 'emerald' | 'amber' | 'red';
+  steps: { title: string; desc: React.ReactNode; icon: React.ReactNode }[];
+  stocks: MetricStock[];
+  suggestedQuestions?: string[];
+};
+
+const metricToneClass: Record<NonNullable<MetricStock['metrics'][number]['tone']>, string> = {
+  blue: 'text-blue-400',
+  red: 'text-red-400',
+  emerald: 'text-emerald-400',
+  amber: 'text-amber-400',
+};
+
+const getBriefReasonText = (facts?: string[]) => {
+  if (!facts || facts.length === 0) return '';
+
+  const growthFact = facts.find(fact => /增速|加速/.test(fact));
+  if (growthFact) return growthFact;
+
+  return facts.slice(0, 2).join('，');
+};
+
+function ModelSuggestedQuestions({ questions, onQuestionClick }: { questions: string[]; onQuestionClick?: (question: string) => void }) {
+  if (questions.length === 0) return null;
+
+  return (
+    <div className="mt-4 space-y-2">
+      <div className="px-1 text-[11px] text-slate-500">继续按当前模型因子筛选</div>
+      {questions.slice(0, 3).map((question, i) => (
+        <motion.button
+          key={question}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.35 + i * 0.16 }}
+          onClick={() => onQuestionClick?.(question)}
+          className="w-full text-left bg-slate-800/55 backdrop-blur-xl hover:bg-slate-700/70 border border-white/10 hover:border-indigo-500/35 rounded-xl px-3.5 py-3 flex items-center justify-between gap-3 transition-all group shadow-md"
+        >
+          <span className="text-xs text-slate-300 group-hover:text-white leading-snug">{question}</span>
+          <ArrowRight className="w-4 h-4 text-slate-500 group-hover:text-indigo-300 shrink-0" />
+        </motion.button>
+      ))}
+    </div>
+  );
+}
+
+function MetricFactorFlowView({ config, onComplete, onBuyClick, onQuestionClick }: { config: MetricModelConfig; onComplete?: () => void; onBuyClick?: () => void; onQuestionClick?: (question: string) => void }) {
+  const [step, setStep] = useState(0);
+  const completedRef = React.useRef(false);
+  const allStepsCompleted = step >= config.steps.length;
+
+  React.useEffect(() => {
+    if (step < config.steps.length) {
+      const t = setTimeout(() => setStep(s => s + 1), 700);
+      return () => clearTimeout(t);
+    }
+  }, [step, config.steps.length]);
+
+  React.useEffect(() => {
+    if (allStepsCompleted && onComplete && !completedRef.current) {
+      completedRef.current = true;
+      onComplete();
+    }
+  }, [allStepsCompleted, onComplete]);
+
+  return (
+    <>
+      <ThinkingProcessCard steps={config.steps} step={step} completed={allStepsCompleted} />
+
+      {allStepsCompleted && (
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="space-y-3 mt-4">
+          {config.stocks.map((stock, idx) => (
+            <div key={idx} className="bg-gradient-to-br from-slate-800/60 to-slate-800/40 backdrop-blur-xl rounded-2xl p-4 border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.3)] relative overflow-hidden group">
+              <div className={`absolute top-0 right-0 w-32 h-32 ${stock.changeUp ? 'bg-red-500/5' : 'bg-emerald-500/5'} rounded-full blur-3xl pointer-events-none`} />
+              <div className="flex items-center justify-between gap-3 mb-3 relative z-10">
+                <div className="flex items-center gap-2">
+                  <div className="w-1 h-5 bg-gradient-to-b from-blue-400 to-blue-600 rounded-full" />
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-lg font-bold text-slate-100">{stock.name}</span>
+                    <span className="text-xs text-slate-500 font-mono">{stock.code}</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className={`text-sm font-semibold tabular-nums ${stock.changeUp ? 'text-red-400' : 'text-emerald-400'}`}>{stock.price}</span>
+                  <span className={`text-sm font-bold tabular-nums ${stock.changeUp ? 'text-red-400' : 'text-emerald-400'}`}>{stock.change}</span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-0 mb-3 relative z-10 bg-slate-900/35 border border-white/5 rounded-xl overflow-hidden">
+                {stock.metrics.slice(0, 3).map((metric, i) => (
+                  <div key={metric.label} className={`px-2 py-2.5 text-center ${i > 0 ? 'border-l border-white/5' : ''}`}>
+                    <div className={`text-base font-bold tabular-nums ${metricToneClass[metric.tone ?? 'blue']}`}>{metric.value}</div>
+                    <div className="text-[10px] text-slate-500 mt-0.5 leading-tight">{metric.label}</div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mb-3 relative z-10">
+                <div className="shrink-0 px-2 py-0.5 bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/30 rounded text-[10px] font-bold text-amber-400 mb-1 inline-block">入选理由</div>
+                {stock.industry && stock.industryChange && stock.industryMomentum && stock.detailReasonFactors ? (
+                  <div className="mt-1 space-y-1.5 text-xs">
+                    <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 text-slate-400">
+                      <span className="text-slate-100 font-semibold">{stock.industry}行业</span>
+                      <span>/</span>
+                      <span>涨幅 <span className="text-red-300 font-semibold tabular-nums">{stock.industryChange}</span></span>
+                      <span>/</span>
+                      <span>增速 <span className="text-red-300 font-semibold tabular-nums">{stock.industryMomentum}</span></span>
+                    </div>
+                    <div className="space-y-0.5">
+                      {stock.detailReasonFactors.slice(0, 3).map(factor => (
+                        <div key={factor.label} className="flex items-start justify-between gap-3 leading-relaxed">
+                          <span className="text-slate-500 shrink-0">{factor.label}</span>
+                          <span className="text-slate-300 text-right">{factor.value}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : stock.detailReasonText ? (
+                  <p className="text-xs text-slate-400 leading-relaxed">{stock.detailReasonText}</p>
+                ) : stock.industry && stock.industryChange && stock.industryMomentum && stock.stockFactors ? (
+                  <div className="space-y-1.5 text-xs text-slate-400 leading-relaxed">
+                    <div>
+                      {stock.industry}行业 / 涨幅 {stock.industryChange} / 增速 {stock.industryMomentum}
+                    </div>
+                    <div>
+                      个股数据：
+                      {stock.stockFactors.slice(0, 2).map(factor => (
+                        <span key={factor.label} className="mr-2">
+                          {factor.label} {factor.value}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ) : stock.detailReasonFacts ? (
+                  <div className="space-y-1.5 text-xs text-slate-400 leading-relaxed">
+                    {stock.detailReasonFacts.slice(0, 4).map(fact => (
+                      <div key={fact}>{fact}</div>
+                    ))}
+                  </div>
+                ) : stock.reasonFacts ? (
+                  <p className="text-xs text-slate-400 leading-relaxed">{stock.reasonFacts.slice(0, 2).join('；')}。</p>
+                ) : (
+                  <p className="text-xs text-slate-400 leading-relaxed">{stock.reason}</p>
+                )}
+              </div>
+
+              <div className="flex justify-center">
+                <button onClick={onBuyClick} className="w-[60%] h-[36px] rounded-full bg-blue-500/15 hover:bg-blue-500/25 text-blue-100 border border-blue-500/30 backdrop-blur-md flex items-center justify-center gap-1.5 transition-all active:scale-95 group/btn shadow-[0_4px_20px_rgba(59,130,246,0.15)] relative z-10">
+                  <span className="font-medium text-[13px] tracking-wide">买入</span>
+                  <ArrowUpRight className="w-3.5 h-3.5 text-blue-300 group-hover/btn:text-white transition-colors" />
+                </button>
+              </div>
+            </div>
+          ))}
+        </motion.div>
+      )}
+      {allStepsCompleted && (
+        <ModelSuggestedQuestions questions={config.suggestedQuestions ?? []} onQuestionClick={onQuestionClick} />
+      )}
+    </>
+  );
+}
+
+const METRIC_MODEL_CONFIGS: Record<string, MetricModelConfig> = {
+  '低估值选股': {
+    title: '低估值选股',
+    accent: 'amber',
+    steps: [
+      { title: '估值样本筛选', icon: <Filter className="w-4 h-4" />, desc: <div className="text-xs text-slate-400">剔除亏损股，保留滚动市盈率为正且市值大于 80 亿的股票。</div> },
+      { title: '市盈率历史分位计算', icon: <PieChart className="w-4 h-4" />, desc: <div className="text-xs text-slate-400">计算滚动市盈率绝对值、滚动市盈率历史百分位和市盈增长比率。</div> },
+      { title: '市净率分位复核', icon: <Shield className="w-4 h-4" />, desc: <div className="text-xs text-slate-400">追加市净率历史百分位过滤，保留估值处于历史低位的样本。</div> },
+    ],
+    stocks: [
+      { name: '美的集团', code: '000333', price: '64.20', change: '+1.18%', changeUp: true, metrics: [{ label: '5日涨幅', value: '+3.6%', tone: 'red' }, { label: 'PE', value: '12.6x', tone: 'amber' }, { label: 'PEG', value: '0.82', tone: 'emerald' }], reasonFacts: ['PE (TTM) 12.6x', '营业收入 1061.0 亿元，增速为 10.3%'], detailReasonText: '市盈增长比率（PEG）为 0.82，营业收入为 1061.0 亿元、增速为 10.3%，扣非净利润为 87.6 亿元、增速为 12.1%，滚动市盈率（PE TTM）为 12.6x。', reason: '滚动市盈率 12.6x，滚动市盈率历史百分位 18%；市盈增长比率（PEG）0.82，市净率历史百分位 22%。' },
+      { name: '海螺水泥', code: '600585', price: '22.74', change: '+0.64%', changeUp: true, metrics: [{ label: '5日涨幅', value: '+2.1%', tone: 'red' }, { label: 'PE', value: '9.8x', tone: 'amber' }, { label: 'PEG', value: '0.76', tone: 'emerald' }], reasonFacts: ['净资产收益率 7.8%', '扣非净利润 18.4 亿元，增速为 8.6%'], detailReasonText: '滚动市盈率（PE TTM）为 9.8x，净资产收益率为 7.8%，扣非净利润为 18.4 亿元、增速为 8.6%。', reason: '滚动市盈率 9.8x，滚动市盈率历史百分位 14%；市盈增长比率（PEG）0.76，市净率历史百分位 19%。' },
+      { name: '格力电器', code: '000651', price: '39.35', change: '+0.92%', changeUp: true, metrics: [{ label: '5日涨幅', value: '+2.8%', tone: 'red' }, { label: 'PE', value: '8.9x', tone: 'amber' }, { label: 'PEG', value: '0.69', tone: 'emerald' }], reasonFacts: ['PE (TTM) 8.9x', '归母净利润 90.0 亿元，增速为 13.8%'], detailReasonText: '滚动市盈率（PE TTM）为 8.9x，市净率为 1.86x，市盈增长比率（PEG）为 0.69，扣非净利润为 86.3 亿元、增速为 11.4%。', reason: '滚动市盈率 8.9x，滚动市盈率历史百分位 16%；市盈增长比率（PEG）0.69，市净率历史百分位 24%。' },
+    ],
+    suggestedQuestions: [
+      '继续筛选PE历史百分位低于20%的股票',
+      '继续筛选PEG低于1且扣非净利润同比为正的股票',
+      '继续筛选PB历史百分位低于25%的股票',
+    ],
+  },
+  '产业景气度选股': {
+    title: '产业景气度选股',
+    accent: 'red',
+    steps: [
+      { title: '产业池构建', icon: <Database className="w-4 h-4" />, desc: <div className="text-xs text-slate-400">按申万三级行业和产业链标签聚合样本，计算产业层面扣非净利润增长率。</div> },
+      { title: '景气指标排序', icon: <TrendingUp className="w-4 h-4" />, desc: <div className="text-xs text-slate-400">按产业扣非净利润增长率、综合涨跌幅、单季度 ROE 排序。</div> },
+      { title: '龙头个股映射', icon: <Target className="w-4 h-4" />, desc: <div className="text-xs text-slate-400">在高景气产业内筛选流动性和财务指标满足条件的个股。</div> },
+    ],
+    stocks: [
+      { name: '中际旭创', code: '300308', price: '86.42', change: '+3.21%', changeUp: true, industry: '通信', industryChange: '+18.4%', industryMomentum: '+3.2%', stockFactors: [{ label: '营收同比增长率', value: '+54%' }, { label: '净资产收益率', value: '6.8%' }], metrics: [{ label: '5日涨幅', value: '+12.8%', tone: 'red' }, { label: '净利润', value: '12.4亿', tone: 'blue' }, { label: '同比增长', value: '+62%', tone: 'emerald' }], detailReasonFactors: [{ label: '营收增速', value: '32.8 亿 / +54%' }, { label: '销售毛利率', value: '21.6%' }, { label: '均线状态', value: 'MA20 > MA60' }], detailReasonText: '通信行业 / 涨幅 +18.4% / 增速 +3.2%。个股信息：营收增速 32.8 亿 / +54%，销售毛利率 21.6%，均线状态 MA20 > MA60。', reason: '所属行业：通信；光模块产业扣非净利润增长率 +62%，产业综合涨跌幅 +18.4%，净资产收益率（单季度）6.8%。' },
+      { name: '北方华创', code: '002371', price: '312.60', change: '+2.48%', changeUp: true, industry: '电子', industryChange: '+13.6%', industryMomentum: '+2.4%', stockFactors: [{ label: '市盈率', value: '42.5' }, { label: '销售毛利率', value: '44.2%' }], metrics: [{ label: '5日涨幅', value: '+8.6%', tone: 'red' }, { label: '净利润', value: '10.8亿', tone: 'blue' }, { label: '同比增长', value: '+47%', tone: 'emerald' }], detailReasonFactors: [{ label: '营收增速', value: '56.3 亿 / +38%' }, { label: '销售毛利率', value: '44.2%' }, { label: '均线状态', value: 'MA20 > MA60' }], detailReasonText: '电子行业 / 涨幅 +13.6% / 增速 +2.4%。个股信息：营收增速 56.3 亿 / +38%，销售毛利率 44.2%，均线状态 MA20 > MA60。', reason: '所属行业：电子；半导体设备产业扣非净利润增长率 +47%，产业综合涨跌幅 +13.6%，净资产收益率（单季度）5.9%。' },
+      { name: '阳光电源', code: '300274', price: '81.56', change: '+1.76%', changeUp: true, industry: '电力设备', industryChange: '+11.2%', industryMomentum: '+1.8%', stockFactors: [{ label: '营收同比增长率', value: '+31%' }, { label: '市盈率增长比率', value: '0.86' }], metrics: [{ label: '5日涨幅', value: '+6.4%', tone: 'red' }, { label: '净利润', value: '9.6亿', tone: 'blue' }, { label: '同比增长', value: '+39%', tone: 'emerald' }], detailReasonFactors: [{ label: '营收增速', value: '81.6 亿 / +31%' }, { label: 'PEG', value: '0.86' }, { label: '均线状态', value: 'MA20 > MA60' }], detailReasonText: '电力设备行业 / 涨幅 +11.2% / 增速 +1.8%。个股信息：营收增速 81.6 亿 / +31%，PEG 0.86，均线状态 MA20 > MA60。', reason: '所属行业：电力设备；逆变器产业扣非净利润增长率 +39%，产业综合涨跌幅 +11.2%，净资产收益率（单季度）5.4%。' },
+    ],
+    suggestedQuestions: [
+      '继续筛选一级产业景气度排名前5的股票',
+      '继续筛选二级产业广度高于40%的股票',
+      '继续筛选产业指数近20日涨跌幅排名前30%的股票',
+    ],
+  },
+  '新兴产业+成长股模型': {
+    title: '新兴产业+成长股模型',
+    accent: 'indigo',
+    steps: [
+      { title: '新兴产业范围确定', icon: <Sprout className="w-4 h-4" />, desc: <div className="text-xs text-slate-400">覆盖 AI 算力、机器人、半导体设备、新能源链和创新药方向。</div> },
+      { title: '成长增速筛选', icon: <LineChart className="w-4 h-4" />, desc: <div className="text-xs text-slate-400">计算营业收入同比增长率、净利润同比增长率和两项增速加速度。</div> },
+      { title: '加速度确认', icon: <Activity className="w-4 h-4" />, desc: <div className="text-xs text-slate-400">保留收入增速加速度和净利润增速加速度为正的股票。</div> },
+    ],
+    stocks: [
+      { name: '新易盛', code: '300502', price: '72.00', change: '+2.16%', changeUp: true, industry: '通信', industryChange: '+18.4%', industryMomentum: '+3.2%', metrics: [{ label: '营收', value: '28.6亿', tone: 'blue' }, { label: '净利润', value: '8.2亿', tone: 'red' }, { label: '净利润同比增长', value: '+88%', tone: 'emerald' }], reasonFacts: ['净利润 8.2 亿，增速 88%', '净利润增速加速度 21%'], detailReasonFactors: [{ label: '净利加速度', value: '+21%' }, { label: '营收加速度', value: '+12%' }, { label: 'PEG', value: '0.82' }], detailReasonText: '通信行业 / 涨幅 +18.4% / 增速 +3.2%。个股信息：净利加速度 +21%，营收加速度 +12%，PEG 0.82。', reason: '营业收入同比增长率 +54%，净利润同比增长率 +88%；营业收入增速加速度 +12%，净利润增速加速度 +21%。' },
+      { name: '汇川技术', code: '300124', price: '58.40', change: '+1.34%', changeUp: true, industry: '电力设备', industryChange: '+11.2%', industryMomentum: '+1.8%', metrics: [{ label: '营收', value: '64.5亿', tone: 'blue' }, { label: '净利润', value: '11.3亿', tone: 'red' }, { label: '净利润同比增长', value: '+36%', tone: 'emerald' }], reasonFacts: ['营业收入 64.5 亿，增速 31%', '净资产收益率 17.5%'], detailReasonFactors: [{ label: '净利加速度', value: '+10%' }, { label: '营收加速度', value: '+8%' }, { label: 'ROE', value: '17.5%' }], detailReasonText: '电力设备行业 / 涨幅 +11.2% / 增速 +1.8%。个股信息：净利加速度 +10%，营收加速度 +8%，ROE 17.5%。', reason: '营业收入同比增长率 +31%，净利润同比增长率 +36%；营业收入增速加速度 +8%，净利润增速加速度 +10%。' },
+      { name: '药明康德', code: '603259', price: '52.18', change: '+1.08%', changeUp: true, industry: '医药生物', industryChange: '+7.6%', industryMomentum: '+1.1%', metrics: [{ label: '营收', value: '91.8亿', tone: 'blue' }, { label: '净利润', value: '19.6亿', tone: 'red' }, { label: '净利润同比增长', value: '+29%', tone: 'emerald' }], reasonFacts: ['净利润 19.6 亿，增速 29%', 'PEG 0.94'], detailReasonFactors: [{ label: 'PEG', value: '0.94' }, { label: 'ROE', value: '21.4%' }, { label: '营收加速度', value: '+6%' }], detailReasonText: '医药生物行业 / 涨幅 +7.6% / 增速 +1.1%。个股信息：PEG 0.94，ROE 21.4%，营收加速度 +6%。', reason: '营业收入同比增长率 +24%，净利润同比增长率 +29%；营业收入增速加速度 +6%，净利润增速加速度 +9%。' },
+    ],
+    suggestedQuestions: [
+      '继续筛选营业收入和净利润同比增速均为正的股票',
+      '继续筛选营收增速加速度和净利润增速加速度均为正的股票',
+      '继续筛选PEG低且个股中期价格动量靠前的股票',
+    ],
+  },
+};
+
 /** Q-06: 高股息低波动模型-选股结果页 */
 /** Q-06: 高股息低波动模型-选股结果页 */
-function DividendFlowView({ onComplete, onBuyClick }: { onComplete?: () => void; onBuyClick?: () => void }) {
+function DividendFlowView({ onComplete, onBuyClick, onQuestionClick }: { onComplete?: () => void; onBuyClick?: () => void; onQuestionClick?: (question: string) => void }) {
   const [step, setStep] = useState(0);
   const completedRef = React.useRef(false);
 
@@ -2676,7 +2836,7 @@ function DividendFlowView({ onComplete, onBuyClick }: { onComplete?: () => void;
 
   React.useEffect(() => {
     if (step < steps.length) {
-      const t = setTimeout(() => setStep(s => s + 1), 1800);
+      const t = setTimeout(() => setStep(s => s + 1), 700);
       return () => clearTimeout(t);
     }
   }, [step, steps.length]);
@@ -2694,9 +2854,10 @@ function DividendFlowView({ onComplete, onBuyClick }: { onComplete?: () => void;
     price: string;
     change: string;
     changeUp: boolean;
-    dividend: string;
-    volatility: string;
-    roe: string;
+    gain5d: string;
+    marketCap: string;
+    volume: string;
+    reason: string;
     trendStatus: string;
     entryPrice: string;
     pressureLevel: string;
@@ -2710,9 +2871,10 @@ function DividendFlowView({ onComplete, onBuyClick }: { onComplete?: () => void;
       price: '25.68',
       change: '+1.15%',
       changeUp: true,
-      dividend: '近三年股息率 5.2%',
-      volatility: '年化波动率 18.3%',
-      roe: 'ROE 15.8%',
+      gain5d: '+3.2%',
+      marketCap: '5,820亿',
+      volume: '18.6亿',
+      reason: '股息率 TTM 为 4.6%，5 年均股息率为 4.2%，已连续分红 10 年。',
       trendStatus: '处于稳健上涨通道，波动率低，适合长期持有。',
       entryPrice: '24.5-25.2元',
       pressureLevel: '短期压力位27元，关键支撑位24元',
@@ -2726,9 +2888,10 @@ function DividendFlowView({ onComplete, onBuyClick }: { onComplete?: () => void;
       price: '38.50',
       change: '+0.78%',
       changeUp: true,
-      dividend: '近三年股息率 6.8%',
-      volatility: '年化波动率 22.1%',
-      roe: 'ROE 18.2%',
+      gain5d: '+2.4%',
+      marketCap: '7,126亿',
+      volume: '24.8亿',
+      reason: '股息率 TTM 为 6.8%，5 年均股息率为 6.1%，已连续分红 9 年。',
       trendStatus: '底部企稳后缓慢上涨，高股息提供安全垫。',
       entryPrice: '37-38元',
       pressureLevel: '短期压力位40元，关键支撑位36.5元',
@@ -2742,9 +2905,10 @@ function DividendFlowView({ onComplete, onBuyClick }: { onComplete?: () => void;
       price: '38.20',
       change: '+1.32%',
       changeUp: true,
-      dividend: '近三年股息率 4.5%',
-      volatility: '年化波动率 19.6%',
-      roe: 'ROE 16.5%',
+      gain5d: '+4.1%',
+      marketCap: '9,180亿',
+      volume: '31.2亿',
+      reason: 'ROE 近 3 年均值为 16.5%，股息率 TTM 为 4.5%，5 年均股息率为 3.9%。',
       trendStatus: '经过充分调整后企稳回升，基本面优质。',
       entryPrice: '36.5-37.5元',
       pressureLevel: '短期压力位39.5元，关键支撑位36元',
@@ -2758,9 +2922,10 @@ function DividendFlowView({ onComplete, onBuyClick }: { onComplete?: () => void;
       price: '6.15',
       change: '+0.82%',
       changeUp: true,
-      dividend: '近三年股息率 5.8%',
-      volatility: '年化波动率 20.5%',
-      roe: 'ROE 12.3%',
+      gain5d: '+1.9%',
+      marketCap: '7,530亿',
+      volume: '15.4亿',
+      reason: '股息率 TTM 为 5.8%，5 年均股息率为 5.2%，已连续分红 12 年。',
       trendStatus: '低位震荡后温和上涨，高股息低估值特征明显。',
       entryPrice: '5.9-6.1元',
       pressureLevel: '短期压力位6.5元，关键支撑位5.8元',
@@ -2770,49 +2935,15 @@ function DividendFlowView({ onComplete, onBuyClick }: { onComplete?: () => void;
     },
   ];
 
+  const suggestedQuestions = [
+    '继续筛选股息率TTM高于4%的股票',
+    '继续筛选近1年年化波动率低于20%的股票',
+    '继续筛选ROE近3年均值高于12%的股票',
+  ];
+
   return (
     <>
-      <div className="bg-slate-800/60 backdrop-blur-xl rounded-3xl p-5 border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.3)] relative overflow-hidden">
-        <div className="space-y-4 relative">
-          <div className="absolute left-[15px] top-4 bottom-4 w-0.5 bg-slate-700/50 z-0" />
-
-          {steps.map((s, i) => {
-            const isActive = i === step;
-            const isCompleted = i < step;
-            if (i > step) return null;
-
-            return (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="relative z-10 flex gap-4"
-              >
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 border-2 ${
-                  isCompleted ? 'bg-blue-500/20 border-blue-500/50 text-blue-400' :
-                  isActive ? 'bg-blue-600 border-blue-400 text-white shadow-[0_0_15px_rgba(37,99,235,0.5)]' :
-                  'bg-slate-800 border-slate-600 text-slate-500'
-                }`}>
-                  {isActive ? <Loader2 className="w-4 h-4 animate-spin" /> : s.icon}
-                </div>
-                <div className="flex-1 pt-1">
-                  <div className={`text-sm font-bold flex items-center justify-between ${isActive ? 'text-blue-400' : isCompleted ? 'text-slate-200' : 'text-slate-500'}`}>
-                    <span>{s.title}</span>
-                    {s.editable && isCompleted && (
-                      <button className="text-[10px] text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 px-2 py-0.5 rounded border border-blue-500/30 transition-colors flex items-center gap-1">
-                        <span>修改</span>
-                      </button>
-                    )}
-                  </div>
-                  <div className={`mt-1 leading-relaxed ${isActive ? 'text-slate-300' : isCompleted ? 'text-slate-400' : 'text-slate-600'}`}>
-                    {s.desc}
-                  </div>
-                </div>
-              </motion.div>
-            );
-          })}
-        </div>
-      </div>
+      <ThinkingProcessCard steps={steps} step={step} completed={allStepsCompleted} />
 
       {allStepsCompleted && (
         <>
@@ -2847,51 +2978,26 @@ function DividendFlowView({ onComplete, onBuyClick }: { onComplete?: () => void;
                   </div>
                 </div>
 
-                <div className="mb-3 relative z-10">
-                  <div className="bg-slate-900/40 backdrop-blur-sm rounded-xl border border-white/10 px-4 py-3 flex items-center justify-center gap-3">
-                    <span className="text-sm font-bold text-blue-400">
-                      {stock.fromTrend}
-                    </span>
-                    <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                    </svg>
-                    <span className="text-sm font-bold text-red-400">
-                      上涨趋势
-                    </span>
+                <div className="grid grid-cols-3 gap-0 mb-3 relative z-10 bg-slate-900/35 border border-white/5 rounded-xl overflow-hidden">
+                  <div className="px-2 py-2.5 text-center">
+                    <div className="text-sm font-bold text-red-400 tabular-nums">{stock.gain5d}</div>
+                    <div className="text-[10px] text-slate-500 mt-0.5">5日涨幅</div>
                   </div>
-                </div>
-
-                <div className="mb-3 relative z-10 bg-slate-900/40 rounded-xl p-3 border border-white/5">
-                  <div className="text-[10px] text-slate-500 mb-2">近60日K线走势</div>
-                  <img 
-                    src={stock.klineImage} 
-                    alt={`${stock.name} K线图`}
-                    className="w-full h-auto rounded-lg"
-                  />
+                  <div className="px-2 py-2.5 text-center border-l border-white/5">
+                    <div className="text-sm font-bold text-blue-300 tabular-nums">{stock.marketCap}</div>
+                    <div className="text-[10px] text-slate-500 mt-0.5">市值</div>
+                  </div>
+                  <div className="px-2 py-2.5 text-center border-l border-white/5">
+                    <div className="text-sm font-bold text-slate-300 tabular-nums">{stock.volume}</div>
+                    <div className="text-[10px] text-slate-500 mt-0.5">成交量</div>
+                  </div>
                 </div>
 
                 <div className="mb-3 relative z-10">
                   <div className="shrink-0 px-2 py-0.5 bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/30 rounded text-[10px] font-bold text-amber-400 mb-2 inline-block">
                     入选理由
                   </div>
-                  <div className="space-y-2 text-xs text-slate-400 leading-relaxed">
-                    <div>
-                      <span className="text-slate-500">趋势状态：</span>
-                      <span className="text-slate-300">{stock.trendStatus}</span>
-                    </div>
-                    <div>
-                      <span className="text-slate-500">建仓参考价位：</span>
-                      <span className="text-slate-300">{stock.entryPrice}</span>
-                    </div>
-                    <div>
-                      <span className="text-slate-500">压力支撑：</span>
-                      <span className="text-slate-300">{stock.pressureLevel}</span>
-                    </div>
-                    <div>
-                      <span className="text-slate-500">催化事件：</span>
-                      <span className="text-slate-300">{stock.catalyst}</span>
-                    </div>
-                  </div>
+                  <p className="text-xs text-slate-400 leading-relaxed">{stock.reason}</p>
                 </div>
 
                 <div className="flex justify-center">
@@ -2903,27 +3009,7 @@ function DividendFlowView({ onComplete, onBuyClick }: { onComplete?: () => void;
               </div>
             ))}
           </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="space-y-3 mt-4"
-          >
-            {[
-              '批量买入',
-              '加入自选股',
-              '增加筛选条件'
-            ].map((text, i) => (
-              <button 
-                key={i} 
-                className="w-full text-left bg-slate-800/60 backdrop-blur-xl hover:bg-slate-700/80 border border-white/10 hover:border-blue-500/30 rounded-2xl p-4 flex items-center justify-between transition-all group shadow-md"
-              >
-                <span className="text-sm text-slate-200 group-hover:text-white transition-colors">{text}</span>
-                <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-blue-400 transition-colors" />
-              </button>
-            ))}
-          </motion.div>
+          <ModelSuggestedQuestions questions={suggestedQuestions} onQuestionClick={onQuestionClick} />
         </>
       )}
     </>
@@ -3010,7 +3096,7 @@ function MomentumFlowView({ onComplete, onBuyClick, initialCompleted }: { onComp
 
   React.useEffect(() => {
     if (step < steps.length) {
-      const t = setTimeout(() => setStep(s => s + 1), 2000);
+      const t = setTimeout(() => setStep(s => s + 1), 700);
       return () => clearTimeout(t);
     }
   }, [step, steps.length]);
@@ -3101,45 +3187,7 @@ function MomentumFlowView({ onComplete, onBuyClick, initialCompleted }: { onComp
 
   return (
     <>
-      <div className="bg-slate-800/60 backdrop-blur-xl rounded-3xl p-5 border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.3)] relative overflow-hidden">
-        <div className="space-y-4 relative">
-          <div className="absolute left-[15px] top-4 bottom-4 w-0.5 bg-slate-700/50 z-0" />
-          {steps.map((s, i) => {
-            const isActive = i === step;
-            const isCompleted = i < step;
-            if (i > step) return null;
-            return (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="relative z-10 flex gap-4"
-              >
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 border-2 ${
-                  isCompleted ? 'bg-blue-500/20 border-blue-500/50 text-blue-400' :
-                  isActive ? 'bg-blue-600 border-blue-400 text-white shadow-[0_0_15px_rgba(37,99,235,0.5)]' :
-                  'bg-slate-800 border-slate-600 text-slate-500'
-                }`}>
-                  {isActive ? <Loader2 className="w-4 h-4 animate-spin" /> : s.icon}
-                </div>
-                <div className="flex-1 pt-1">
-                  <div className={`text-sm font-bold flex items-center justify-between ${isActive ? 'text-blue-400' : isCompleted ? 'text-slate-200' : 'text-slate-500'}`}>
-                    <span>{s.title}</span>
-                    {s.editable && isCompleted && (
-                      <button className="text-[10px] text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 px-2 py-0.5 rounded border border-blue-500/30 transition-colors flex items-center gap-1">
-                        <span>修改</span>
-                      </button>
-                    )}
-                  </div>
-                  <div className={`mt-1 leading-relaxed ${isActive ? 'text-slate-300' : isCompleted ? 'text-slate-400' : 'text-slate-600'}`}>
-                    {s.desc}
-                  </div>
-                </div>
-              </motion.div>
-            );
-          })}
-        </div>
-      </div>
+      <ThinkingProcessCard steps={steps} step={step} completed={allStepsCompleted} />
 
       {allStepsCompleted && (
         <>
@@ -3220,26 +3268,6 @@ function MomentumFlowView({ onComplete, onBuyClick, initialCompleted }: { onComp
                   </button>
                 </div>
               </div>
-            ))}
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="space-y-3 mt-4"
-          >
-            {['批量买入', '加入自选股', '增加筛选条件'].map((text, i) => (
-              <button
-                key={i}
-                className="w-full text-left bg-slate-800/60 backdrop-blur-xl hover:bg-slate-700/80 border border-white/10 hover:border-blue-500/30 rounded-2xl p-4 flex items-center justify-between transition-all group shadow-md"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-7 h-7 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center text-sm font-bold shrink-0 shadow-inner">#</div>
-                  <span className="text-sm text-slate-200 group-hover:text-white leading-snug font-medium">{text}</span>
-                </div>
-                <ArrowRight className="w-4 h-4 text-slate-500 group-hover:text-blue-400 shrink-0" />
-              </button>
             ))}
           </motion.div>
         </>
@@ -3334,7 +3362,7 @@ function WuguEventFlowView({ onComplete, onViewOtherStrategies, onBuyClick }: { 
 
   React.useEffect(() => {
     if (step < steps.length) {
-      const t = setTimeout(() => setStep(s => s + 1), 2000);
+      const t = setTimeout(() => setStep(s => s + 1), 700);
       return () => clearTimeout(t);
     }
   }, [step, steps.length]);
@@ -3367,47 +3395,7 @@ function WuguEventFlowView({ onComplete, onViewOtherStrategies, onBuyClick }: { 
 
   return (
     <>
-      <div className="bg-slate-800/60 backdrop-blur-xl rounded-3xl p-5 border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.3)] relative overflow-hidden">
-      <div className="space-y-4 relative">
-        <div className="absolute left-[15px] top-4 bottom-4 w-0.5 bg-slate-700/50 z-0" />
-
-        {steps.map((s, i) => {
-          const isActive = i === step;
-          const isCompleted = i < step;
-          if (i > step) return null;
-
-          return (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="relative z-10 flex gap-4"
-            >
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 border-2 ${
-                isCompleted ? 'bg-blue-500/20 border-blue-500/50 text-blue-400' :
-                isActive ? 'bg-blue-600 border-blue-400 text-white shadow-[0_0_15px_rgba(37,99,235,0.5)]' :
-                'bg-slate-800 border-slate-600 text-slate-500'
-              }`}>
-                {isActive ? <Loader2 className="w-4 h-4 animate-spin" /> : s.icon}
-              </div>
-              <div className="flex-1 pt-1">
-                <div className={`text-sm font-bold flex items-center justify-between ${isActive ? 'text-blue-400' : isCompleted ? 'text-slate-200' : 'text-slate-500'}`}>
-                  <span>{s.title}</span>
-                  {s.editable && isCompleted && (
-                    <button className="text-[10px] text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 px-2 py-0.5 rounded border border-blue-500/30 transition-colors flex items-center gap-1">
-                      <span>修改</span>
-                    </button>
-                  )}
-                </div>
-                <div className={`mt-1 leading-relaxed ${isActive ? 'text-slate-300' : isCompleted ? 'text-slate-400' : 'text-slate-600'}`}>
-                  {s.desc}
-                </div>
-              </div>
-            </motion.div>
-          );
-        })}
-      </div>
-    </div>
+      <ThinkingProcessCard steps={steps} step={step} completed={allStepsCompleted} />
 
     {allStepsCompleted && (
       <>
@@ -3486,31 +3474,6 @@ function WuguEventFlowView({ onComplete, onViewOtherStrategies, onBuyClick }: { 
                 </button>
               </div>
             </div>
-          ))}
-        </motion.div>
-
-        {/* 提示词：参考产品买手的样式 */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="space-y-3 mt-4"
-        >
-          {[
-            '批量买入',
-            '加入自选股',
-            '增加筛选条件'
-          ].map((text, i) => (
-            <button 
-              key={i} 
-              className="w-full text-left bg-slate-800/60 backdrop-blur-xl hover:bg-slate-700/80 border border-white/10 hover:border-blue-500/30 rounded-2xl p-4 flex items-center justify-between transition-all group shadow-md"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-7 h-7 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center text-sm font-bold shrink-0 shadow-inner">#</div>
-                <span className="text-sm text-slate-200 group-hover:text-white leading-snug font-medium">{text}</span>
-              </div>
-              <ArrowRight className="w-4 h-4 text-slate-500 group-hover:text-blue-400 shrink-0" />
-            </button>
           ))}
         </motion.div>
       </>
@@ -3772,7 +3735,7 @@ function ChatView({ agent, initialPrompt, onExit, onViewProfile, onBuyClick }: {
   const [chatHistory, setChatHistory] = useState<{role: 'user'|'agent', content: React.ReactNode}[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [activeQuantModel, _setActiveQuantModel] = useState<string | null>(
-    _persistedChatQuantModel || (agent.id === 'quant' && initialPrompt === '事件驱动模型' ? '事件驱动模型' : null)
+    _persistedChatQuantModel || (agent.id === 'quant' && initialPrompt === '成长股模型' ? '成长股模型' : null)
   );
   const [showWuguEventFlow, setShowWuguEventFlow] = useState(agent.id === 'quant' && initialPrompt === '钨矿涨价事件');
   const [showEventDrivenFlow, setShowEventDrivenFlow] = useState(false);
@@ -3802,6 +3765,41 @@ function ChatView({ agent, initialPrompt, onExit, onViewProfile, onBuyClick }: {
   const [quantCardIndex, setQuantCardIndex] = useState(0);
   const quantScrollRef = React.useRef<HTMLDivElement>(null);
   const [showWatchlistDrawer, setShowWatchlistDrawer] = useState(false);
+  const [inputMode, setInputMode] = useState<'keyboard' | 'voice'>('keyboard');
+  const [isRecording, setIsRecording] = useState(false);
+  const [showFactorDrawer, setShowFactorDrawer] = useState(false);
+  const [selectedComposeModel, setSelectedComposeModel] = useState('新兴产业+成长股模型');
+  const [selectedAtomicModels, setSelectedAtomicModels] = useState<string[]>(['成长速度快']);
+  const [selectedFactors, setSelectedFactors] = useState<string[]>(['PE≤8']);
+  const [toastText, setToastText] = useState('');
+
+  const composeModels = ['新兴产业+成长股模型', '低估值选股', '产业景气度选股', '高股息低波动模型', '趋势跟随模型'];
+  const atomicModelOptions = ['行业指数走势强', '新兴产业', '行业景气高', '成长速度快', '经营拐点', '研发投入高', '价格低波动', '盈利稳定', '收入稳定', '现金流稳定'];
+  const stockFactorOptions = [
+    { title: 'PE≤8', value: 'PE≤8', desc: '估值绝对值约束' },
+    { title: 'PEG≤0.5', value: 'PEG≤0.5', desc: '估值与成长匹配' },
+    { title: 'ROE≤0.05', value: 'ROE≤0.05', desc: '净资产收益率阈值' },
+    { title: '股息率 ≥ 6%', value: '股息率 ≥ 6%', desc: '分红收益约束' },
+    { title: '利润增速波动 ≤ 10', value: '利润增速波动 ≤ 10', desc: '利润增速稳定性' },
+    { title: '营收增速 ≥ 20%', value: '营收增速 ≥ 20%', desc: '收入增长阈值' },
+    { title: '扣非净利润 > 0', value: '扣非净利润 > 0', desc: '盈利方向过滤' },
+    { title: '研发费用率 ≥ 8%', value: '研发费用率 ≥ 8%', desc: '研发投入约束' },
+  ];
+
+  const toggleMultiSelect = (value: string, setter: React.Dispatch<React.SetStateAction<string[]>>) => {
+    setter(prev => prev.includes(value) ? prev.filter(item => item !== value) : [...prev, value]);
+  };
+
+  const buildComposeIntent = () => {
+    const atomicText = selectedAtomicModels.length > 0 ? selectedAtomicModels.join(' + ') : '默认原子模型';
+    const factorText = selectedFactors.length > 0 ? selectedFactors.join('、') : '默认因子';
+    return `请按「${selectedComposeModel} + ${atomicText}」自由组合筛选股票，条件包括：${factorText}。`;
+  };
+
+  const showToast = (text: string) => {
+    setToastText(text);
+    window.setTimeout(() => setToastText(''), 1800);
+  };
 
   // 使用 useCallback 稳定 onComplete 回调，避免每次渲染创建新函数
   const handleWuguFlowComplete = useCallback(() => {
@@ -3847,7 +3845,7 @@ function ChatView({ agent, initialPrompt, onExit, onViewProfile, onBuyClick }: {
       }
     });
 
-    if (closestIndex >= 0 && closestIndex < 4) {
+    if (closestIndex >= 0 && closestIndex < 7) {
       setQuantCardIndex(closestIndex);
     }
   };
@@ -3867,12 +3865,56 @@ function ChatView({ agent, initialPrompt, onExit, onViewProfile, onBuyClick }: {
     return () => window.removeEventListener('reset-quant-model', handleReset);
   }, []);
 
+  const renderComposedStockResult = (text: string) => (
+    <div className="space-y-3">
+      <p>已按您的自由组合条件完成编排，当前优先调用 <span className="text-blue-300 font-medium">{selectedComposeModel}</span>，并叠加 {selectedAtomicModels.join('、') || '默认'} 因子复核。</p>
+      <div className="space-y-2">
+        {[
+          { name: '中际旭创', code: '300308', note: '净利润 12.4 亿，增速 62%；近20日涨幅 18.4%' },
+          { name: '汇川技术', code: '300124', note: 'ROE 17.5%；营业收入 64.5 亿，增速 31%' },
+          { name: '长江电力', code: '600900', note: '股息率 TTM 4.6%；近1年年化波动率 18.3%' },
+        ].map(stock => (
+          <div key={stock.code} className="rounded-xl border border-white/10 bg-slate-900/45 px-3 py-2">
+            <div className="flex items-center justify-between gap-2">
+              <span className="font-semibold text-slate-100">{stock.name}</span>
+              <span className="text-[11px] font-mono text-slate-500">{stock.code}</span>
+            </div>
+            <div className="mt-1 text-[11px] text-slate-400 leading-snug">{stock.note}</div>
+          </div>
+        ))}
+      </div>
+      <p className="text-[11px] text-slate-500">组合条件：{text.replace(/^请按/, '按')}</p>
+    </div>
+  );
+
   const handlePromptClick = (text: string) => {
+    const isComposedStockQuery = agent.id === 'quant' && /自由组合筛选股票|自由组合|组合筛选/.test(text);
     setChatHistory(prev => [
       ...prev,
       { role: 'user', content: text },
-      { role: 'agent', content: '好的，我正在为您分析并整理相关信息，请稍候...' }
+      { role: 'agent', content: isComposedStockQuery ? renderComposedStockResult(text) : '好的，我正在为您分析并整理相关信息，请稍候...' }
     ]);
+  };
+
+  const handleSendInput = () => {
+    const text = inputValue.trim();
+    if (!text) return;
+    handlePromptClick(text);
+    setInputValue('');
+  };
+
+  const handleComposeConfirm = () => {
+    const text = buildComposeIntent();
+    setInputValue(text);
+    setInputMode('keyboard');
+    setShowFactorDrawer(false);
+  };
+
+  const handleStopRecording = () => {
+    setIsRecording(false);
+    setInputMode('keyboard');
+    setInputValue('筛选近20日趋势向上、营收增速高于行业中位数的股票');
+    showToast('语音已识别，可继续修改后发送');
   };
 
   const renderWealthContent = () => (
@@ -3922,7 +3964,7 @@ function ChatView({ agent, initialPrompt, onExit, onViewProfile, onBuyClick }: {
             <div onClick={() => onViewProfile('zhao')} className="bg-slate-800/60 backdrop-blur-xl rounded-3xl border border-white/10 shadow-lg relative overflow-hidden cursor-pointer hover:bg-slate-800/80 transition-all group">
               {/* Large Photo Header */}
               <div className="relative h-48 w-full overflow-hidden">
-                <img src={赵金胜大照片} className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500" alt="" />
+                <img src={赵金胜小头像} className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500" alt="" />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent"></div>
                 <div className="absolute bottom-4 left-5 right-5 flex justify-between items-end">
                   <div>
@@ -3989,7 +4031,7 @@ function ChatView({ agent, initialPrompt, onExit, onViewProfile, onBuyClick }: {
           {showLiHua && (
             <div onClick={() => onViewProfile('li')} className="bg-slate-800/60 backdrop-blur-xl rounded-3xl border border-white/10 shadow-lg relative overflow-hidden cursor-pointer hover:bg-slate-800/80 transition-all group">
               <div className="relative h-48 w-full overflow-hidden">
-                <img src={李华大照片} className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500" alt="" />
+                <img src={李华小头像} className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500" alt="" />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent"></div>
                 <div className="absolute bottom-4 left-5 right-5 flex justify-between items-end">
                   <div>
@@ -4066,7 +4108,7 @@ function ChatView({ agent, initialPrompt, onExit, onViewProfile, onBuyClick }: {
   const quantModels = [
     { title: '趋势跟随模型', desc: '捕捉市场主线，顺势而为', icon: <TrendingUp className="w-6 h-6 text-blue-400" /> },
     { title: '高股息低波动模型', desc: '稳健防御，追求长期复利', icon: <Shield className="w-6 h-6 text-emerald-400" /> },
-    { title: '事件驱动模型', desc: '挖掘催化剂，提前布局', icon: <Zap className="w-6 h-6 text-amber-400" /> },
+    { title: '成长股模型', desc: '景气产业，优选高成长龙头', icon: <Sprout className="w-6 h-6 text-indigo-400" /> },
     { title: '短线强势模型', desc: '量价共振，寻找爆发点', icon: <Activity className="w-6 h-6 text-red-400" /> }
   ];
 
@@ -4081,9 +4123,9 @@ function ChatView({ agent, initialPrompt, onExit, onViewProfile, onBuyClick }: {
         />
       );
     }
-    // Q-04: 对话页事件驱动模型选股（多事件）
-    if (activeQuantModel === '事件驱动模型' || showEventDrivenFlow) {
-      return <EventDrivenFlowView onComplete={handleEventDrivenComplete} onBuyClick={onBuyClick} />;
+    // Q-04: 对话页成长股模型选股
+    if (activeQuantModel === '成长股模型' || showEventDrivenFlow) {
+      return <GrowthStockFlowView onComplete={handleEventDrivenComplete} onBuyClick={onBuyClick} onQuestionClick={handlePromptClick} />;
     }
     // Q-05: 趋势跟随模型选股
     if (activeQuantModel === '趋势跟随模型') {
@@ -4091,7 +4133,10 @@ function ChatView({ agent, initialPrompt, onExit, onViewProfile, onBuyClick }: {
     }
     // Q-06: 高股息低波动模型选股
     if (activeQuantModel === '高股息低波动模型') {
-      return <DividendFlowView onComplete={handleDividendComplete} onBuyClick={onBuyClick} />;
+      return <DividendFlowView onComplete={handleDividendComplete} onBuyClick={onBuyClick} onQuestionClick={handlePromptClick} />;
+    }
+    if (activeQuantModel && METRIC_MODEL_CONFIGS[activeQuantModel]) {
+      return <MetricFactorFlowView config={METRIC_MODEL_CONFIGS[activeQuantModel]} onComplete={handleDividendComplete} onBuyClick={onBuyClick} onQuestionClick={handlePromptClick} />;
     }
     // Q-07: 短线强势模型选股
     if (activeQuantModel === '短线强势模型') {
@@ -4169,75 +4214,59 @@ function ChatView({ agent, initialPrompt, onExit, onViewProfile, onBuyClick }: {
             </div>
           </div>
 
-          {/* Card 2: 事件驱动模型 */}
+          {/* Card 2: 成长股模型 */}
           <div className="w-[280px] sm:w-[320px] shrink-0 snap-center bg-slate-800/60 backdrop-blur-xl rounded-3xl border border-white/10 shadow-lg flex flex-col overflow-hidden">
             <div className="p-5 border-b border-white/5 bg-gradient-to-r from-indigo-900/30 to-transparent relative overflow-hidden">
-              <Zap className="absolute right-[-10px] bottom-[-10px] w-24 h-24 text-indigo-500/10" />
+              <Sprout className="absolute right-[-10px] bottom-[-10px] w-24 h-24 text-indigo-500/10" />
               <div className="relative z-10 flex items-center gap-3 mb-2">
                 <div className="w-8 h-8 rounded-full bg-indigo-500/20 flex items-center justify-center border border-indigo-500/30">
-                  <Zap className="w-4 h-4 text-indigo-400" />
+                  <Sprout className="w-4 h-4 text-indigo-400" />
                 </div>
-                <div className="text-base font-bold text-slate-100">事件驱动模型</div>
+                <div className="text-base font-bold text-slate-100">成长股模型</div>
               </div>
-              <div className="text-xs text-indigo-200/70 relative z-10">因事儿动，挖掘利好事件中的潜力股</div>
+              <div className="text-xs text-indigo-200/70 relative z-10">按经营现金流、利润增速、营收增速筛选</div>
             </div>
-            <div className="p-5 flex-1 space-y-4">
-              {/* 事件摘要 */}
-              <div className="pl-3 border-l-2 border-indigo-500/50">
-                <div className="text-[10px] text-indigo-400/80 mb-0.5">近期热点事件</div>
-                <div className="text-sm font-bold text-slate-200 leading-snug">全球钨矿供给收紧，价格创近十年新高</div>
+            <div className="p-5 flex-1 space-y-3">
+              <div className="text-sm font-medium text-slate-300 mb-3 flex items-center gap-1.5">
+                <Sprout className="w-4 h-4 text-slate-400" />
+                成长指标信号
               </div>
 
-              {/* 产业链影响 */}
-              <div className="space-y-2">
-                <div className="text-xs font-medium text-slate-400">产业链影响分析</div>
-                <div className="space-y-2.5 pl-1">
-                  <div className="flex items-start gap-2">
-                    <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-indigo-400 shrink-0 shadow-[0_0_4px_rgba(99,102,241,0.5)]"></div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-slate-200">上游采选</span>
-                        <span className="text-[10px] text-indigo-400">重大利好</span>
-                      </div>
-                      <div className="text-[10px] text-slate-400 leading-tight mt-0.5">供给端受环保及配额限制，价格上涨直接增厚利润。</div>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-2 opacity-60">
-                    <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-slate-500 shrink-0"></div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-slate-300">中游冶炼</span>
-                        <span className="text-[10px] text-slate-400">偏好/中性</span>
-                      </div>
-                      <div className="text-[10px] text-slate-500 leading-tight mt-0.5">长协矿源冶炼厂能享受库存溢价。</div>
-                    </div>
-                  </div>
+              {/* Item 1 */}
+              <div className="bg-slate-900/60 rounded-lg p-2.5 border border-white/5 flex flex-col gap-2">
+                <div className="flex justify-between items-center px-1">
+                  <span className="text-sm font-bold text-slate-200">中际旭创 <span className="text-xs text-slate-500 font-mono font-normal">300308</span></span>
+                  <span className="text-sm font-bold text-red-400">+3.21%</span>
+                </div>
+                <div className="px-2 py-1.5 rounded border border-indigo-500/20 bg-indigo-500/10">
+                  <span className="text-[11px] text-indigo-200/90">经营现金流 18.6 亿元，利润增速 +85%</span>
                 </div>
               </div>
 
-              {/* 重点关注标的 */}
-              <div className="pt-3 border-t border-white/5 space-y-2">
-                <div className="text-xs font-medium text-slate-400">重点关注标的</div>
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center px-1">
-                    <div>
-                      <span className="text-sm font-bold text-slate-200">中钨高新</span>
-                      <span className="text-xs text-slate-500 font-mono font-normal ml-1.5">000657</span>
-                    </div>
-                    <div className="text-[10px] text-indigo-200/70">硬质合金刀具强定价权</div>
-                  </div>
-                  <div className="flex justify-between items-center px-1">
-                    <div>
-                      <span className="text-sm font-bold text-slate-200">厦门钨业</span>
-                      <span className="text-xs text-slate-500 font-mono font-normal ml-1.5">600549</span>
-                    </div>
-                    <div className="text-[10px] text-indigo-200/70">资源储量丰富直接受益</div>
-                  </div>
+              {/* Item 2 */}
+              <div className="bg-slate-900/60 rounded-lg p-2.5 border border-white/5 flex flex-col gap-2">
+                <div className="flex justify-between items-center px-1">
+                  <span className="text-sm font-bold text-slate-200">北方华创 <span className="text-xs text-slate-500 font-mono font-normal">002371</span></span>
+                  <span className="text-sm font-bold text-red-400">+2.48%</span>
+                </div>
+                <div className="px-2 py-1.5 rounded border border-indigo-500/20 bg-indigo-500/10">
+                  <span className="text-[11px] text-indigo-200/90">营收增速 +38%，利润增速 +42%</span>
+                </div>
+              </div>
+
+              {/* Item 3 */}
+              <div className="bg-slate-900/60 rounded-lg p-2.5 border border-white/5 flex flex-col gap-2">
+                <div className="flex justify-between items-center px-1">
+                  <span className="text-sm font-bold text-slate-200">宁德时代 <span className="text-xs text-slate-500 font-mono font-normal">300750</span></span>
+                  <span className="text-sm font-bold text-red-400">+1.86%</span>
+                </div>
+                <div className="px-2 py-1.5 rounded border border-indigo-500/20 bg-indigo-500/10">
+                  <span className="text-[11px] text-indigo-200/90">经营现金流 126.4 亿元，营收增速 +18%</span>
                 </div>
               </div>
             </div>
             <div className="p-4 border-t border-white/5">
-              <button onClick={() => setActiveQuantModel('事件驱动模型')} className="w-full py-2.5 bg-indigo-600/20 text-indigo-400 rounded-xl text-sm font-medium hover:bg-indigo-600/30 transition-colors border border-indigo-500/30">运行该模型</button>
+              <button onClick={() => setActiveQuantModel('成长股模型')} className="w-full py-2.5 bg-indigo-600/20 text-indigo-400 rounded-xl text-sm font-medium hover:bg-indigo-600/30 transition-colors border border-indigo-500/30">运行该模型</button>
             </div>
           </div>
 
@@ -4305,31 +4334,31 @@ function ChatView({ agent, initialPrompt, onExit, onViewProfile, onBuyClick }: {
               <div className="text-xs text-cyan-200/70 relative z-10">股息打底、风控为先，追求长期稳健收益</div>
             </div>
             <div className="p-5 flex-1 space-y-3 overflow-y-auto scrollbar-hide">
-              <div className="bg-slate-900/50 rounded-xl p-3 border border-white/5">
-                <div className="flex justify-between items-center mb-2">
+              <div className="bg-slate-900/60 rounded-lg p-2.5 border border-white/5 flex flex-col gap-2">
+                <div className="flex justify-between items-center px-1">
                   <span className="text-sm font-bold text-slate-200">工商银行 <span className="text-xs text-slate-500 font-mono">601398</span></span>
-                  <span className="px-2 py-0.5 bg-cyan-500/20 text-cyan-400 text-[10px] rounded border border-cyan-500/30">银行业</span>
+                  <span className="text-sm font-bold text-red-400">+0.56%</span>
                 </div>
-                <div className="text-[10px] text-slate-400 leading-relaxed">
-                  近三年连续分红，当前股息率 <span className="text-red-400 font-bold">5.2%</span>，市盈率仅为 <span className="text-blue-400 font-bold">5.1</span>，远低于15的阈值。
+                <div className="px-2 py-1.5 rounded border border-cyan-500/20 bg-cyan-500/10">
+                  <span className="block truncate text-[11px] text-cyan-200/90">股息率 TTM 5.2%，连续分红 10 年</span>
                 </div>
               </div>
-              <div className="bg-slate-900/50 rounded-xl p-3 border border-white/5">
-                <div className="flex justify-between items-center mb-2">
+              <div className="bg-slate-900/60 rounded-lg p-2.5 border border-white/5 flex flex-col gap-2">
+                <div className="flex justify-between items-center px-1">
                   <span className="text-sm font-bold text-slate-200">长江电力 <span className="text-xs text-slate-500 font-mono">600900</span></span>
-                  <span className="px-2 py-0.5 bg-cyan-500/20 text-cyan-400 text-[10px] rounded border border-cyan-500/30">电力业</span>
+                  <span className="text-sm font-bold text-red-400">+1.15%</span>
                 </div>
-                <div className="text-[10px] text-slate-400 leading-relaxed">
-                  近五年连续分红，当前股息率 <span className="text-red-400 font-bold">4.1%</span>，市盈率 <span className="text-blue-400 font-bold">18.5</span>，净利润连续3年稳定增长。
+                <div className="px-2 py-1.5 rounded border border-cyan-500/20 bg-cyan-500/10">
+                  <span className="block truncate text-[11px] text-cyan-200/90">5年均股息率 4.2%，年化波动率 18.3%</span>
                 </div>
               </div>
-              <div className="bg-slate-900/50 rounded-xl p-3 border border-white/5">
-                <div className="flex justify-between items-center mb-2">
+              <div className="bg-slate-900/60 rounded-lg p-2.5 border border-white/5 flex flex-col gap-2">
+                <div className="flex justify-between items-center px-1">
                   <span className="text-sm font-bold text-slate-200">中国神华 <span className="text-xs text-slate-500 font-mono">601088</span></span>
-                  <span className="px-2 py-0.5 bg-cyan-500/20 text-cyan-400 text-[10px] rounded border border-cyan-500/30">煤炭开采</span>
+                  <span className="text-sm font-bold text-red-400">+0.78%</span>
                 </div>
-                <div className="text-[10px] text-slate-400 leading-relaxed">
-                  业绩稳健且高比例分红承诺，当前股息率 <span className="text-red-400 font-bold">5.8%</span>，市盈率仅为 <span className="text-blue-400 font-bold">10.5</span>，长线资金偏好。
+                <div className="px-2 py-1.5 rounded border border-cyan-500/20 bg-cyan-500/10">
+                  <span className="block truncate text-[11px] text-cyan-200/90">股息率 TTM 6.8%，ROE近3年均值 18.2%</span>
                 </div>
               </div>
             </div>
@@ -4338,11 +4367,106 @@ function ChatView({ agent, initialPrompt, onExit, onViewProfile, onBuyClick }: {
             </div>
           </div>
 
+          {/* Card 5: 低估值选股 */}
+          <div className="w-[280px] sm:w-[320px] shrink-0 snap-center bg-slate-800/60 backdrop-blur-xl rounded-3xl border border-white/10 shadow-lg flex flex-col overflow-hidden">
+            <div className="p-5 border-b border-white/5 bg-gradient-to-r from-amber-900/30 to-transparent relative overflow-hidden">
+              <PieChart className="absolute right-[-10px] bottom-[-10px] w-24 h-24 text-amber-500/10" />
+              <div className="relative z-10 flex items-center gap-3 mb-2">
+                <div className="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center border border-amber-500/30"><PieChart className="w-4 h-4 text-amber-400" /></div>
+                <div className="text-base font-bold text-slate-100">低估值选股</div>
+              </div>
+              <div className="text-xs text-amber-200/70 relative z-10">按 PE 绝对值、历史百分位和 PEG 筛选</div>
+            </div>
+            <div className="p-5 flex-1 space-y-3">
+              {METRIC_MODEL_CONFIGS['低估值选股'].stocks.map(stock => (
+                <div key={stock.code} className="bg-slate-900/60 rounded-lg p-2.5 border border-white/5 flex flex-col gap-2">
+                  <div className="flex justify-between items-center px-1">
+                    <span className="text-sm font-bold text-slate-200">{stock.name} <span className="text-xs text-slate-500 font-mono">{stock.code}</span></span>
+                    <span className={`text-sm font-bold ${stock.changeUp ? 'text-red-400' : 'text-emerald-400'}`}>{stock.change}</span>
+                  </div>
+                  <div className="px-2 py-1.5 rounded border border-amber-500/20 bg-amber-500/10">
+                    <span className="block truncate text-[11px] text-amber-200/90">{getBriefReasonText(stock.reasonFacts)}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="p-4 border-t border-white/5"><button onClick={() => setActiveQuantModel('低估值选股')} className="w-full py-2.5 bg-amber-600/20 text-amber-400 rounded-xl text-sm font-medium hover:bg-amber-600/30 transition-colors border border-amber-500/30">运行该模型</button></div>
+          </div>
+
+          {/* Card 6: 产业景气度选股 */}
+          <div className="w-[280px] sm:w-[320px] shrink-0 snap-center bg-slate-800/60 backdrop-blur-xl rounded-3xl border border-white/10 shadow-lg flex flex-col overflow-hidden">
+            <div className="p-5 border-b border-white/5 bg-gradient-to-r from-red-900/30 to-transparent relative overflow-hidden">
+              <Flame className="absolute right-[-10px] bottom-[-10px] w-24 h-24 text-red-500/10" />
+              <div className="relative z-10 flex items-center gap-3 mb-2">
+                <div className="w-8 h-8 rounded-full bg-red-500/20 flex items-center justify-center border border-red-500/30"><Flame className="w-4 h-4 text-red-400" /></div>
+                <div className="text-base font-bold text-slate-100">产业景气度选股</div>
+              </div>
+              <div className="text-xs text-red-200/70 relative z-10">按产业利润、涨跌幅和单季 ROE 筛选</div>
+            </div>
+            <div className="p-5 flex-1 space-y-3">
+              {METRIC_MODEL_CONFIGS['产业景气度选股'].stocks.map(stock => (
+                <div key={stock.code} className="bg-slate-900/60 hover:bg-slate-900/65 rounded-lg p-2.5 border border-white/5 hover:border-red-400/20 transition-colors flex flex-col gap-2">
+                  <div className="flex justify-between items-center px-1">
+                    <span className="flex min-w-0 items-center gap-1.5 text-sm font-bold text-slate-200">
+                      <span>{stock.name}</span>
+                      <span className="text-xs text-slate-500 font-mono">{stock.code}</span>
+                      {stock.industry && (
+                        <span className="rounded-md bg-red-500/15 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-red-200">
+                          {stock.industry}
+                        </span>
+                      )}
+                    </span>
+                    <span className={`text-sm font-bold ${stock.changeUp ? 'text-red-400' : 'text-emerald-400'}`}>{stock.change}</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    <div className="rounded border border-red-500/20 bg-red-500/10 px-2 py-1.5 leading-none">
+                      <div className="text-[9px] text-red-200/55">5日内行业涨幅</div>
+                      <div className="mt-1 text-[12px] font-semibold text-red-200 tabular-nums">{stock.industryChange}</div>
+                    </div>
+                    <div className="rounded border border-red-500/20 bg-red-500/10 px-2 py-1.5 leading-none">
+                      <div className="text-[9px] text-red-200/55">5日内股票涨幅</div>
+                      <div className="mt-1 text-[12px] font-semibold text-red-200 tabular-nums">
+                        {stock.metrics[0].value}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="p-4 border-t border-white/5"><button onClick={() => setActiveQuantModel('产业景气度选股')} className="w-full py-2.5 bg-red-600/20 text-red-400 rounded-xl text-sm font-medium hover:bg-red-600/30 transition-colors border border-red-500/30">运行该模型</button></div>
+          </div>
+
+          {/* Card 7: 新兴产业+成长股模型 */}
+          <div className="w-[280px] sm:w-[320px] shrink-0 snap-center bg-slate-800/60 backdrop-blur-xl rounded-3xl border border-white/10 shadow-lg flex flex-col overflow-hidden">
+            <div className="p-5 border-b border-white/5 bg-gradient-to-r from-indigo-900/30 to-transparent relative overflow-hidden">
+              <Sprout className="absolute right-[-10px] bottom-[-10px] w-24 h-24 text-indigo-500/10" />
+              <div className="relative z-10 flex items-center gap-3 mb-2">
+                <div className="w-8 h-8 rounded-full bg-indigo-500/20 flex items-center justify-center border border-indigo-500/30"><Sprout className="w-4 h-4 text-indigo-400" /></div>
+                <div className="text-base font-bold text-slate-100">新兴产业+成长股模型</div>
+              </div>
+              <div className="text-xs text-indigo-200/70 relative z-10">参考成长股模型，叠加增速加速度</div>
+            </div>
+            <div className="p-5 flex-1 space-y-3">
+              {METRIC_MODEL_CONFIGS['新兴产业+成长股模型'].stocks.map(stock => (
+                <div key={stock.code} className="bg-slate-900/60 rounded-lg p-2.5 border border-white/5 flex flex-col gap-2">
+                  <div className="flex justify-between items-center px-1">
+                    <span className="text-sm font-bold text-slate-200">{stock.name} <span className="text-xs text-slate-500 font-mono">{stock.code}</span></span>
+                    <span className={`text-sm font-bold ${stock.changeUp ? 'text-red-400' : 'text-emerald-400'}`}>{stock.change}</span>
+                  </div>
+                  <div className="px-2 py-1.5 rounded border border-indigo-500/20 bg-indigo-500/10">
+                    <span className="block truncate text-[11px] text-indigo-200/90">{(stock.reasonFacts ?? []).slice(0, 2).join('，')}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="p-4 border-t border-white/5"><button onClick={() => setActiveQuantModel('新兴产业+成长股模型')} className="w-full py-2.5 bg-indigo-600/20 text-indigo-400 rounded-xl text-sm font-medium hover:bg-indigo-600/30 transition-colors border border-indigo-500/30">运行该模型</button></div>
+          </div>
+
         </div>
 
         {/* Quant Cards Dots Indicator */}
         <div className="flex justify-center items-center gap-2 mt-2 mb-2">
-          {[0, 1, 2, 3].map((index) => (
+          {[0, 1, 2, 3, 4, 5, 6].map((index) => (
             <button
               key={index}
               onClick={() => {
@@ -4372,7 +4496,7 @@ function ChatView({ agent, initialPrompt, onExit, onViewProfile, onBuyClick }: {
     ? ['已关注', '已签约']
     : agent.id === 'wealth'
       ? ['推荐更多产品', '产品评价', '产品对比']
-      : ['查看历史回测结果', '分析个股'];
+      : [];
 
   return (
     <motion.div 
@@ -4437,12 +4561,12 @@ function ChatView({ agent, initialPrompt, onExit, onViewProfile, onBuyClick }: {
                       : '正在运行事件驱动选股模型，为您筛选"钨矿涨价事件"重点关注投资标的。'}
                     key={wuguFlowCompleted ? 'wugu-done' : 'wugu-running'}
                   />
-                ) : (activeQuantModel === '事件驱动模型' || showEventDrivenFlow) ? (
+                ) : (activeQuantModel === '成长股模型' || showEventDrivenFlow) ? (
                   <TypewriterText
                     text={eventDrivenCompleted
-                      ? '已完成筛选，为您找到3只重点关注投资标的。'
-                      : '正在运行事件驱动选股模型，分析近期重要事件并筛选受益标的。'}
-                    key={eventDrivenCompleted ? 'event-done' : 'event-running'}
+                      ? '已完成筛选，为您找到 3 只高景气成长股。'
+                      : '正在运行成长股模型，从景气产业中筛选高成长龙头标的。'}
+                    key={eventDrivenCompleted ? 'growth-done' : 'growth-running'}
                   />
                 ) : activeQuantModel === '趋势跟随模型' ? (
                   <TypewriterText
@@ -4457,6 +4581,11 @@ function ChatView({ agent, initialPrompt, onExit, onViewProfile, onBuyClick }: {
                       ? '已完成筛选，为您找到 4 只高股息稳健标的。'
                       : '正在运行高股息低波动模型，筛选稳健分红的价值标的。'}
                     key={dividendCompleted ? 'dividend-done' : 'dividend-running'}
+                  />
+                ) : activeQuantModel && METRIC_MODEL_CONFIGS[activeQuantModel] ? (
+                  <TypewriterText
+                    text={`正在运行${activeQuantModel}，按模型指标筛选股票。`}
+                    key={`${activeQuantModel}-running`}
                   />
                 ) : activeQuantModel === '短线强势模型' ? (
                   <TypewriterText
@@ -4553,11 +4682,151 @@ function ChatView({ agent, initialPrompt, onExit, onViewProfile, onBuyClick }: {
         </div>
       </main>
 
+      <AnimatePresence>
+        {showFactorDrawer && agent.id === 'quant' && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowFactorDrawer(false)}
+              className="absolute inset-0 z-40 bg-slate-950/55 backdrop-blur-[2px]"
+            />
+            <motion.div
+              initial={{ y: '105%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '105%' }}
+              transition={{ duration: 0.24, ease: 'easeOut' }}
+              className="absolute left-0 right-0 bottom-0 z-50 max-h-[76%] overflow-y-auto rounded-t-[1.75rem] border-t border-blue-400/25 bg-slate-900/98 px-4 pb-32 pt-4 shadow-[0_-22px_46px_rgba(0,0,0,0.45)] scrollbar-hide"
+            >
+              <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-white/25" />
+              <div className="mb-4 flex items-start justify-between gap-3">
+                <div>
+                  <div className="text-base font-bold text-slate-100">自由组合筛选股票</div>
+                  <div className="mt-1 text-[11px] leading-relaxed text-slate-500">选股模型单选，原子能力和因子可多选；确认后写入输入框继续编辑。</div>
+                </div>
+                <button onClick={() => setShowFactorDrawer(false)} className="h-8 w-8 rounded-full bg-white/5 text-slate-400 hover:text-white">
+                  <X className="mx-auto h-4 w-4" />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <div className="mb-2 text-xs font-semibold text-slate-300">1. 选股模型</div>
+                  <div className="grid grid-cols-2 gap-2">
+                    {composeModels.map(model => (
+                      <button
+                        key={model}
+                        onClick={() => setSelectedComposeModel(model)}
+                        className={`rounded-xl border px-3 py-2 text-left text-xs transition-colors ${
+                          selectedComposeModel === model
+                            ? 'border-cyan-300/60 bg-cyan-400/15 text-cyan-100'
+                            : 'border-white/10 bg-slate-950/45 text-slate-400'
+                        }`}
+                      >
+                        {model}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <div className="mb-2 text-xs font-semibold text-slate-300">2. 原子模型</div>
+                  <div className="grid grid-cols-3 gap-2">
+                    {atomicModelOptions.map(option => (
+                      <button
+                        key={option}
+                        onClick={() => toggleMultiSelect(option, setSelectedAtomicModels)}
+                        className={`rounded-xl border px-2.5 py-2 text-left text-xs transition-colors ${
+                          selectedAtomicModels.includes(option)
+                            ? 'border-blue-300/55 bg-blue-400/15 text-blue-100'
+                            : 'border-white/10 bg-slate-950/45 text-slate-400'
+                        }`}
+                      >
+                        {option}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <div className="mb-2 text-xs font-semibold text-slate-300">3. 选股因子</div>
+                  <div className="grid grid-cols-2 gap-2">
+                    {stockFactorOptions.map(option => (
+                      <button
+                        key={option.value}
+                        onClick={() => toggleMultiSelect(option.value, setSelectedFactors)}
+                        className={`rounded-xl border px-3 py-2 text-left transition-colors ${
+                          selectedFactors.includes(option.value)
+                            ? 'border-indigo-300/55 bg-indigo-400/15'
+                            : 'border-white/10 bg-slate-950/45'
+                        }`}
+                      >
+                        <span className="block text-xs font-semibold text-slate-200">{option.title}</span>
+                        <span className="mt-1 block text-[10px] leading-snug text-slate-500">{option.desc}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <button
+                  onClick={handleComposeConfirm}
+                  disabled={!selectedComposeModel && selectedFactors.length === 0}
+                  className="w-full rounded-2xl bg-gradient-to-r from-cyan-400 to-blue-500 px-4 py-3 text-sm font-bold text-slate-950 shadow-lg shadow-blue-500/20 disabled:opacity-45"
+                >
+                  确定组合
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {isRecording && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-[70] flex flex-col items-center justify-center bg-slate-950/95"
+            onMouseUp={handleStopRecording}
+            onTouchEnd={handleStopRecording}
+          >
+            <div className="text-sm tracking-wide text-slate-400">松开发送，上滑取消</div>
+            <div className="mt-8 flex h-16 items-end justify-center gap-1.5">
+              {[22, 38, 56, 44, 64, 35, 50, 27, 42].map((height, index) => (
+                <div
+                  key={index}
+                  className="w-1 rounded-full bg-gradient-to-t from-blue-600 to-cyan-300 animate-pulse"
+                  style={{ height, animationDelay: `${index * 70}ms` }}
+                />
+              ))}
+            </div>
+            <button onClick={handleStopRecording} className="mt-8 rounded-full border border-white/10 px-5 py-2 text-xs text-slate-400">
+              完成识别
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {toastText && (
+          <motion.div
+            initial={{ opacity: 0, y: 12, x: '-50%' }}
+            animate={{ opacity: 1, y: 0, x: '-50%' }}
+            exit={{ opacity: 0, y: 12, x: '-50%' }}
+            className="absolute bottom-24 left-1/2 z-[80] whitespace-nowrap rounded-2xl bg-slate-100 px-4 py-2 text-xs font-medium text-slate-900 shadow-xl"
+          >
+            {toastText}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Floating Bottom Input Area */}
       <div className="absolute bottom-6 left-4 right-4 z-30 flex flex-col gap-3">
         
         {/* Quick Action Pills - 仅在非Q-02页面显示 */}
-        {!(agent.id === 'quant' && !activeQuantModel && !showWuguEventFlow && !showEventDrivenFlow) && (
+        {quickActions.length > 0 && !(agent.id === 'quant' && !activeQuantModel && !showWuguEventFlow && !showEventDrivenFlow) && (
           <div className="flex gap-2 overflow-x-auto scrollbar-hide px-2">
             {quickActions.map((action, idx) => (
               <button 
@@ -4572,35 +4841,71 @@ function ChatView({ agent, initialPrompt, onExit, onViewProfile, onBuyClick }: {
         )}
 
         {/* Floating Input Card */}
-        <div className="bg-slate-800/90 backdrop-blur-2xl rounded-[2rem] p-2 border border-white/10 shadow-[0_10px_40px_rgba(0,0,0,0.5)] flex items-center gap-2 focus-within:border-blue-500/50 focus-within:shadow-[0_0_20px_rgba(59,130,246,0.2)] transition-all">
-          <button className="h-10 w-10 flex items-center justify-center rounded-full bg-slate-700/50 text-slate-400 hover:text-slate-200 transition-colors shrink-0">
-            <Mic className="w-5 h-5" />
-          </button>
-          <input 
-            type="text" 
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && inputValue.trim()) {
-                handlePromptClick(inputValue);
-                setInputValue('');
-              }
+        {inputMode === 'voice' ? (
+          <button
+            onMouseDown={() => setIsRecording(true)}
+            onTouchStart={(e) => {
+              e.preventDefault();
+              setIsRecording(true);
             }}
-            placeholder="发消息或按住说话..." 
-            className="bg-transparent text-sm outline-none w-full text-slate-200 placeholder:text-slate-500 py-2"
-          />
-          <button 
-            onClick={() => {
-              if (inputValue.trim()) {
-                handlePromptClick(inputValue);
-                setInputValue('');
-              }
-            }}
-            className="h-10 w-10 rounded-full bg-gradient-to-r from-blue-600 to-cyan-600 flex items-center justify-center text-white shrink-0 shadow-md hover:from-blue-500 hover:to-cyan-500 transition-colors"
+            onClick={() => setInputMode('keyboard')}
+            className="rounded-[2rem] border border-blue-300/30 bg-gradient-to-r from-blue-700 to-cyan-600 px-5 py-4 text-center shadow-[0_10px_40px_rgba(0,0,0,0.5)] active:scale-[0.99]"
           >
-            <ArrowRight className="w-5 h-5" />
+            <div className="flex items-center justify-center gap-2 text-sm font-semibold tracking-[0.16em] text-white">
+              <Mic className="h-5 w-5" />
+              按住说话
+            </div>
+            <div className="mt-1 text-[11px] text-white/60">点击切换键盘输入</div>
           </button>
-        </div>
+        ) : (
+          <div className="bg-slate-800/90 backdrop-blur-2xl rounded-[2rem] p-2 border border-white/10 shadow-[0_10px_40px_rgba(0,0,0,0.5)] flex items-center gap-2 focus-within:border-blue-500/50 focus-within:shadow-[0_0_20px_rgba(59,130,246,0.2)] transition-all">
+            <input
+              type="text"
+              value={inputValue}
+              onFocus={() => {
+                setInputMode('keyboard');
+                setShowFactorDrawer(false);
+              }}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleSendInput();
+              }}
+              placeholder={agent.id === 'quant' ? '输入偏好，或点右侧自由组合编排' : '发消息或按住说话...'}
+              className="bg-transparent text-sm outline-none w-full text-slate-200 placeholder:text-slate-500 py-2"
+            />
+            {inputValue.trim() ? (
+              <button
+                onClick={handleSendInput}
+                className="h-10 w-10 rounded-full bg-gradient-to-r from-blue-600 to-cyan-600 flex items-center justify-center text-white shrink-0 shadow-md hover:from-blue-500 hover:to-cyan-500 transition-colors"
+                aria-label="发送"
+              >
+                <ArrowRight className="w-5 h-5" />
+              </button>
+            ) : (
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  onClick={() => {
+                    setShowFactorDrawer(false);
+                    setInputMode('voice');
+                  }}
+                  className="h-10 w-10 flex items-center justify-center rounded-full bg-slate-700/50 text-slate-400 hover:text-slate-200 transition-colors"
+                  aria-label="语音输入"
+                >
+                  <Mic className="w-5 h-5" />
+                </button>
+                {agent.id === 'quant' && (
+                  <button
+                    onClick={() => setShowFactorDrawer(true)}
+                    className="h-10 w-10 flex items-center justify-center rounded-full bg-blue-500/15 border border-blue-400/20 text-cyan-300 hover:bg-blue-500/25 transition-colors"
+                    aria-label="自由组合选股编排"
+                  >
+                    <Filter className="w-5 h-5" />
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* 加入自选股 - 底部抽屉浮层（absolute 定位，在手机容器内，高度30%） */}

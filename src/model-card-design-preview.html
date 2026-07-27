@@ -1,0 +1,512 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>选股模型卡片差异化设计预览</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: #020817;
+        color: #e5edf8;
+        font-family: Inter, "PingFang SC", "Microsoft YaHei", sans-serif;
+        display: flex;
+        justify-content: center;
+        padding: 28px 16px;
+      }
+
+      .phone {
+        width: 390px;
+        min-height: 844px;
+        border: 12px solid #020617;
+        border-radius: 46px;
+        overflow: hidden;
+        background:
+          radial-gradient(circle at 30% 0%, rgba(37, 99, 235, 0.22), transparent 32%),
+          linear-gradient(180deg, #101b33 0%, #071225 48%, #040b18 100%);
+        box-shadow: 0 28px 70px rgba(0, 0, 0, 0.65);
+      }
+
+      .content {
+        padding: 44px 18px 28px;
+      }
+
+      .eyebrow {
+        color: #8aa0bf;
+        font-size: 12px;
+        margin-bottom: 8px;
+      }
+
+      h1 {
+        margin: 0 0 18px;
+        font-size: 24px;
+        letter-spacing: 0;
+      }
+
+      .stack {
+        display: grid;
+        gap: 14px;
+      }
+
+      .model-card {
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 20px;
+        background: rgba(15, 23, 42, 0.72);
+        overflow: hidden;
+        box-shadow: 0 12px 34px rgba(0, 0, 0, 0.28);
+      }
+
+      .model-head {
+        padding: 16px 16px 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .title-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+      }
+
+      .mark {
+        width: 30px;
+        height: 30px;
+        border-radius: 10px;
+        display: grid;
+        place-items: center;
+        font-weight: 800;
+        font-size: 14px;
+        flex: 0 0 auto;
+      }
+
+      .model-title {
+        font-size: 16px;
+        font-weight: 800;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .rule {
+        font-size: 11px;
+        color: #93a4bd;
+        margin-top: 3px;
+      }
+
+      .run {
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(255, 255, 255, 0.04);
+        color: #dbeafe;
+        height: 30px;
+        padding: 0 12px;
+        border-radius: 10px;
+        font-size: 12px;
+      }
+
+      .stocks {
+        display: grid;
+        gap: 10px;
+        padding: 0 12px 14px;
+      }
+
+      .stock {
+        border-radius: 14px;
+        padding: 12px;
+        background: rgba(2, 6, 23, 0.36);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+      }
+
+      .stock-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 8px;
+      }
+
+      .name {
+        font-size: 15px;
+        font-weight: 800;
+      }
+
+      .code {
+        color: #73859d;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 12px;
+        margin-left: 5px;
+      }
+
+      .up {
+        color: #ff6565;
+        font-size: 15px;
+        font-weight: 900;
+      }
+
+      .reason {
+        margin-top: 8px;
+        color: #a8b7cc;
+        font-size: 12px;
+        line-height: 1.45;
+      }
+
+      .reason-label {
+        color: #6f8199;
+        font-size: 10px;
+        margin-top: 9px;
+        margin-bottom: 6px;
+      }
+
+      .reason-pair {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+      }
+
+      .reason-pill {
+        border-radius: 9px;
+        padding: 7px 8px;
+        background: rgba(15, 23, 42, 0.64);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+      }
+
+      .reason-pill strong {
+        display: block;
+        font-size: 13px;
+        line-height: 1;
+      }
+
+      .reason-pill span {
+        display: block;
+        margin-top: 4px;
+        color: #71839b;
+        font-size: 9px;
+      }
+
+      .formula {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 8px;
+        padding: 8px;
+        border-radius: 10px;
+        background: rgba(2, 6, 23, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+      }
+
+      .formula-box {
+        flex: 1;
+        min-width: 0;
+        text-align: center;
+      }
+
+      .formula-box strong {
+        display: block;
+        font-size: 13px;
+      }
+
+      .formula-box span {
+        display: block;
+        color: #71839b;
+        font-size: 9px;
+        margin-top: 3px;
+      }
+
+      .operator {
+        color: #71839b;
+        font-weight: 900;
+        font-size: 12px;
+      }
+
+      .heat-bars {
+        display: grid;
+        gap: 6px;
+        margin-top: 8px;
+      }
+
+      .heat-row {
+        display: grid;
+        grid-template-columns: 68px 1fr 44px;
+        gap: 8px;
+        align-items: center;
+        font-size: 10px;
+        color: #8fa1b8;
+      }
+
+      .track {
+        height: 6px;
+        border-radius: 99px;
+        background: rgba(255, 255, 255, 0.08);
+        overflow: hidden;
+      }
+
+      .fill {
+        height: 100%;
+        border-radius: inherit;
+      }
+
+      .growth-chain {
+        display: grid;
+        grid-template-columns: 1fr 26px 1fr;
+        align-items: stretch;
+        margin-top: 8px;
+        gap: 4px;
+      }
+
+      .chain-node {
+        border-radius: 10px;
+        background: rgba(99, 102, 241, 0.12);
+        border: 1px solid rgba(196, 181, 253, 0.14);
+        padding: 8px;
+      }
+
+      .chain-node strong {
+        display: block;
+        color: #c7d2fe;
+        font-size: 13px;
+      }
+
+      .chain-node span {
+        color: #7f8eaa;
+        font-size: 9px;
+      }
+
+      .chain-arrow {
+        display: grid;
+        place-items: center;
+        color: #818cf8;
+        font-weight: 900;
+      }
+
+      .dividend {
+        background:
+          linear-gradient(180deg, rgba(8, 145, 178, 0.18), rgba(15, 23, 42, 0.72)),
+          rgba(15, 23, 42, 0.72);
+      }
+
+      .dividend .mark {
+        color: #67e8f9;
+        background: rgba(8, 145, 178, 0.18);
+        border: 1px solid rgba(103, 232, 249, 0.22);
+      }
+
+      .dividend .reason-pill strong {
+        color: #67e8f9;
+      }
+
+      .value {
+        background:
+          linear-gradient(135deg, rgba(245, 158, 11, 0.16), transparent 58%),
+          rgba(15, 23, 42, 0.72);
+      }
+
+      .value .mark {
+        color: #fbbf24;
+        background: rgba(245, 158, 11, 0.14);
+        border: 1px solid rgba(251, 191, 36, 0.22);
+      }
+
+      .value .stock {
+        background:
+          linear-gradient(90deg, rgba(245, 158, 11, 0.09), transparent),
+          rgba(2, 6, 23, 0.36);
+      }
+
+      .industry {
+        background:
+          linear-gradient(180deg, rgba(239, 68, 68, 0.14), rgba(15, 23, 42, 0.72));
+      }
+
+      .industry .mark {
+        color: #fca5a5;
+        background: rgba(239, 68, 68, 0.13);
+        border: 1px solid rgba(252, 165, 165, 0.22);
+        border-radius: 50%;
+      }
+
+      .industry .stock {
+        position: relative;
+        padding-left: 18px;
+      }
+
+      .industry .stock::before {
+        content: "";
+        position: absolute;
+        left: 8px;
+        top: 14px;
+        bottom: 14px;
+        width: 3px;
+        border-radius: 3px;
+        background: #ef4444;
+      }
+
+      .emerging {
+        background:
+          linear-gradient(135deg, rgba(99, 102, 241, 0.18), rgba(15, 23, 42, 0.74) 58%),
+          rgba(15, 23, 42, 0.72);
+      }
+
+      .emerging .mark {
+        color: #c4b5fd;
+        background: rgba(99, 102, 241, 0.16);
+        border: 1px solid rgba(196, 181, 253, 0.24);
+      }
+
+      .emerging .stocks {
+        grid-template-columns: 1fr;
+      }
+
+      .emerging .reason {
+        display: inline-block;
+        padding: 6px 8px;
+        border-radius: 9px;
+        background: rgba(99, 102, 241, 0.12);
+        color: #c7d2fe;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="phone">
+      <section class="content">
+        <div class="eyebrow">选股首页卡片差异化预览</div>
+        <h1>四个模型，四种轻量表达</h1>
+
+        <div class="stack">
+          <article class="model-card dividend">
+            <div class="model-head">
+              <div class="title-row">
+                <div class="mark">息</div>
+                <div>
+                  <div class="model-title">高股息低波动选股</div>
+                  <div class="rule">防守型：低波动 + 分红</div>
+                </div>
+              </div>
+              <button class="run">运行</button>
+            </div>
+            <div class="stocks">
+              <div class="stock">
+                <div class="stock-top"><div class="name">长江电力<span class="code">600900</span></div><div class="up">+1.15%</div></div>
+                <div class="reason-label">入选理由</div>
+                <div class="reason-pair">
+                  <div class="reason-pill"><strong>18.3%</strong><span>近1年年化波动率</span></div>
+                  <div class="reason-pill"><strong>4.6%</strong><span>股息率 TTM</span></div>
+                </div>
+              </div>
+              <div class="stock">
+                <div class="stock-top"><div class="name">中国神华<span class="code">601088</span></div><div class="up">+0.78%</div></div>
+                <div class="reason-label">入选理由</div>
+                <div class="reason-pair">
+                  <div class="reason-pill"><strong>22.1%</strong><span>近1年年化波动率</span></div>
+                  <div class="reason-pill"><strong>6.8%</strong><span>股息率 TTM</span></div>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="model-card value">
+            <div class="model-head">
+              <div class="title-row">
+                <div class="mark">PE</div>
+                <div>
+                  <div class="model-title">低估值选股</div>
+                  <div class="rule">估值型：低 PE + 低 PEG</div>
+                </div>
+              </div>
+              <button class="run">运行</button>
+            </div>
+            <div class="stocks">
+              <div class="stock">
+                <div class="stock-top"><div class="name">美的集团<span class="code">000333</span></div><div class="up">+1.18%</div></div>
+                <div class="reason-label">入选理由</div>
+                <div class="formula">
+                  <div class="formula-box"><strong>12.6x</strong><span>滚动市盈率</span></div>
+                  <div class="operator">+</div>
+                  <div class="formula-box"><strong>18%</strong><span>PE历史百分位</span></div>
+                </div>
+              </div>
+              <div class="stock">
+                <div class="stock-top"><div class="name">格力电器<span class="code">000651</span></div><div class="up">+0.92%</div></div>
+                <div class="reason-label">入选理由</div>
+                <div class="formula">
+                  <div class="formula-box"><strong>8.9x</strong><span>滚动市盈率</span></div>
+                  <div class="operator">÷</div>
+                  <div class="formula-box"><strong>0.69</strong><span>PEG</span></div>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="model-card industry">
+            <div class="model-head">
+              <div class="title-row">
+                <div class="mark">热</div>
+                <div>
+                  <div class="model-title">产业景气度选股</div>
+                  <div class="rule">产业型：产业利润 + 趋势广度</div>
+                </div>
+              </div>
+              <button class="run">运行</button>
+            </div>
+            <div class="stocks">
+              <div class="stock">
+                <div class="stock-top"><div class="name">中际旭创<span class="code">300308</span></div><div class="up">+3.21%</div></div>
+                <div class="reason-label">入选理由</div>
+                <div class="heat-bars">
+                  <div class="heat-row"><span>产业净利</span><div class="track"><div class="fill" style="width: 82%; background:#ef4444"></div></div><strong>+62%</strong></div>
+                  <div class="heat-row"><span>综合涨跌</span><div class="track"><div class="fill" style="width: 64%; background:#f97316"></div></div><strong>+18.4%</strong></div>
+                </div>
+              </div>
+              <div class="stock">
+                <div class="stock-top"><div class="name">北方华创<span class="code">002371</span></div><div class="up">+2.48%</div></div>
+                <div class="reason-label">入选理由</div>
+                <div class="heat-bars">
+                  <div class="heat-row"><span>产业净利</span><div class="track"><div class="fill" style="width: 70%; background:#ef4444"></div></div><strong>+47%</strong></div>
+                  <div class="heat-row"><span>单季ROE</span><div class="track"><div class="fill" style="width: 58%; background:#60a5fa"></div></div><strong>5.9%</strong></div>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="model-card emerging">
+            <div class="model-head">
+              <div class="title-row">
+                <div class="mark">G</div>
+                <div>
+                  <div class="model-title">新兴产业+成长股模型</div>
+                  <div class="rule">成长型：收入利润 + 加速度</div>
+                </div>
+              </div>
+              <button class="run">运行</button>
+            </div>
+            <div class="stocks">
+              <div class="stock">
+                <div class="stock-top"><div class="name">新易盛<span class="code">300502</span></div><div class="up">+2.16%</div></div>
+                <div class="reason-label">入选理由</div>
+                <div class="growth-chain">
+                  <div class="chain-node"><strong>+54%</strong><span>营收同比</span></div>
+                  <div class="chain-arrow">→</div>
+                  <div class="chain-node"><strong>+21pct</strong><span>净利加速度</span></div>
+                </div>
+              </div>
+              <div class="stock">
+                <div class="stock-top"><div class="name">汇川技术<span class="code">300124</span></div><div class="up">+1.34%</div></div>
+                <div class="reason-label">入选理由</div>
+                <div class="growth-chain">
+                  <div class="chain-node"><strong>+36%</strong><span>净利润同比</span></div>
+                  <div class="chain-arrow">→</div>
+                  <div class="chain-node"><strong>+8pct</strong><span>营收加速度</span></div>
+                </div>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>
