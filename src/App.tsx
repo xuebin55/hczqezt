@@ -61,6 +61,9 @@ import {
 
 // 直接引用「头像」文件夹里的投顾猎头头像，打包后带哈希 URL 可避免缓存旧图
 import 投顾猎头头像 from '../头像/投顾猎头头像.png';
+import 产品买手头像 from '../头像/产品买手头像.png';
+import 炒股参谋头像 from './assets/quant-avatar.png';
+import 炒股参谋引导动画 from './assets/quant-guide.mp4';
 // 投顾个人页顶部小头像
 import 李华小头像 from '../投资顾问照片/李华小头像.png';
 import 赵金胜小头像 from '../投资顾问照片/赵金胜小头像.png';
@@ -91,7 +94,7 @@ type ThinkingStep = {
   icon: React.ReactNode;
 };
 
-function ThinkingProcessCard({ steps, step, completed }: { steps: ThinkingStep[]; step: number; completed: boolean }) {
+function ThinkingProcessCard({ steps, step, completed, avatarSrc }: { steps: ThinkingStep[]; step: number; completed: boolean; avatarSrc?: string }) {
   const [expanded, setExpanded] = useState(!completed);
 
   React.useEffect(() => {
@@ -108,13 +111,24 @@ function ThinkingProcessCard({ steps, step, completed }: { steps: ThinkingStep[]
         className="w-full px-5 py-4 flex items-center justify-between gap-3 text-left"
       >
         <div className="flex items-center gap-2 min-w-0">
-          <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 border ${
-            completed
-              ? 'bg-blue-500/15 border-blue-500/30 text-blue-300'
-              : 'bg-blue-600/20 border-blue-500/40 text-blue-300'
-          }`}>
-            {completed ? <CheckCircle2 className="w-4 h-4" /> : <Loader2 className="w-4 h-4 animate-spin" />}
-          </div>
+          {avatarSrc ? (
+            <div className="relative h-8 w-8 shrink-0">
+              <img src={avatarSrc} className="h-8 w-8 rounded-full border border-blue-500/30 object-cover" alt="" />
+              <span className={`absolute -right-0.5 -bottom-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full border border-slate-800 ${
+                completed ? 'bg-blue-500 text-white' : 'bg-slate-900 text-blue-300'
+              }`}>
+                {completed ? <CheckCircle2 className="h-2.5 w-2.5" /> : <Loader2 className="h-2.5 w-2.5 animate-spin" />}
+              </span>
+            </div>
+          ) : (
+            <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 border ${
+              completed
+                ? 'bg-blue-500/15 border-blue-500/30 text-blue-300'
+                : 'bg-blue-600/20 border-blue-500/40 text-blue-300'
+            }`}>
+              {completed ? <CheckCircle2 className="w-4 h-4" /> : <Loader2 className="w-4 h-4 animate-spin" />}
+            </div>
+          )}
           <div className="min-w-0">
             <div className="text-sm font-bold text-slate-100">思考过程</div>
             <div className="text-[11px] text-slate-500 mt-0.5">
@@ -212,12 +226,12 @@ const AGENTS: Record<AgentType, AgentData> = {
   wealth: {
     id: 'wealth',
     name: '产品买手',
-    avatar: '/头像/产品买手头像.png',
+    avatar: 产品买手头像,
   },
   quant: {
     id: 'quant',
     name: '炒股参谋',
-    avatar: '/头像/炒股参谋头像.png',
+    avatar: 炒股参谋头像,
   },
   advisor: {
     id: 'advisor',
@@ -225,6 +239,27 @@ const AGENTS: Record<AgentType, AgentData> = {
     avatar: 投顾猎头头像,
   }
 };
+
+function AgentMedia({ src, poster, className, videoClassName, loop = false }: { src?: string; poster: string; className: string; videoClassName?: string; loop?: boolean }) {
+  const [videoFailed, setVideoFailed] = useState(false);
+
+  if (src && !videoFailed) {
+    return (
+      <video
+        src={src}
+        poster={poster}
+        className={videoClassName ?? className}
+        autoPlay
+        muted
+        playsInline
+        loop={loop}
+        onError={() => setVideoFailed(true)}
+      />
+    );
+  }
+
+  return <img src={poster} className={className} referrerPolicy="no-referrer" alt="" />;
+}
 
 function TypewriterText({ text }: { text: string, key?: string }) {
   const [displayedText, setDisplayedText] = useState('');
@@ -1427,19 +1462,12 @@ function QuantGuideView({ onStartChat, onBack }: { onStartChat: (prompt?: string
           className="relative w-full max-w-[280px] aspect-[4/5] flex items-end justify-center overflow-hidden"
           style={{ contain: 'layout style paint' }}
         >
-          <video
-            src="/avatars/quant-guide.mov"
-            autoPlay
-            muted
-            playsInline
-            loop={false}
+          <AgentMedia
+            src={炒股参谋引导动画}
+            poster={AGENTS.quant.avatar}
+            loop
             className="absolute inset-0 w-full h-full object-cover object-top"
-            style={{
-              maskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 60%, rgba(0,0,0,0) 100%)',
-              WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 60%, rgba(0,0,0,0) 100%)',
-              objectFit: 'cover',
-              objectPosition: 'top center',
-            }}
+            videoClassName="absolute inset-0 w-full h-full object-cover object-top [mask-image:linear-gradient(to_bottom,rgba(0,0,0,1)_60%,rgba(0,0,0,0)_100%)] [-webkit-mask-image:linear-gradient(to_bottom,rgba(0,0,0,1)_60%,rgba(0,0,0,0)_100%)]"
           />
           {/* Floor Reflection */}
           <div className="absolute -bottom-4 w-2/3 h-4 bg-blue-500/20 blur-xl rounded-[100%]"></div>
@@ -1583,17 +1611,11 @@ function WealthGuideView({ onStartChat, onBack }: { onStartChat: () => void, onB
           className="relative w-full max-w-[280px] aspect-[4/5] flex items-end justify-center"
         >
           {/* 虚拟人形象：使用本地「产品买手虚拟人」视频，只播放一次 */}
-          <video
+          <AgentMedia
             src="/虚拟人引导/产品买手虚拟人.mov"
+            poster={AGENTS.wealth.avatar}
             className="w-full h-full object-cover object-top"
-            style={{
-              maskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 60%, rgba(0,0,0,0) 100%)',
-              WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 60%, rgba(0,0,0,0) 100%)',
-            }}
-            autoPlay
-            muted
-            playsInline
-            loop={false}
+            videoClassName="w-full h-full object-cover object-top [mask-image:linear-gradient(to_bottom,rgba(0,0,0,1)_60%,rgba(0,0,0,0)_100%)] [-webkit-mask-image:linear-gradient(to_bottom,rgba(0,0,0,1)_60%,rgba(0,0,0,0)_100%)]"
           />
           {/* Floor Reflection */}
           <div className="absolute -bottom-4 w-2/3 h-4 bg-blue-500/20 blur-xl rounded-[100%]"></div>
@@ -1724,17 +1746,11 @@ function AdvisorGuideView({ onStartChat, onBack }: { onStartChat: (prompt?: stri
           transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
           className="relative w-full max-w-[280px] aspect-[4/5] flex items-end justify-center"
         >
-          <video
+          <AgentMedia
             src="/虚拟人引导/投顾猎头虚拟人.mov"
+            poster={AGENTS.advisor.avatar}
             className="w-full h-full object-cover object-top rounded-lg"
-            style={{
-              maskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 60%, rgba(0,0,0,0) 100%)',
-              WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 60%, rgba(0,0,0,0) 100%)',
-            }}
-            autoPlay
-            muted
-            playsInline
-            loop={false}
+            videoClassName="w-full h-full object-cover object-top rounded-lg [mask-image:linear-gradient(to_bottom,rgba(0,0,0,1)_60%,rgba(0,0,0,0)_100%)] [-webkit-mask-image:linear-gradient(to_bottom,rgba(0,0,0,1)_60%,rgba(0,0,0,0)_100%)]"
           />
           <div className="absolute -bottom-4 w-2/3 h-4 bg-orange-500/20 blur-xl rounded-[100%]"></div>
         </motion.div>
@@ -2059,9 +2075,12 @@ function GrowthStockFlowView({ onComplete, onBuyClick, onQuestionClick }: { onCo
   const allStepsCompleted = step >= steps.length;
 
   const suggestedQuestions = [
-    '继续筛选研发费用TTM连续3年递增的股票',
-    '继续筛选研发占比超行业均值的股票',
-    '继续筛选营收增速和利润增速均处行业前30%的股票',
+    '研发费用连续 3 年递增',
+    '研发占比高于行业均值',
+    '营收增速行业前 30%',
+    '利润增速行业前 30%',
+    '经营现金流为正',
+    'ROE 高于 15%',
   ];
 
   // 选股结果：展示 3 只高景气成长股
@@ -2113,7 +2132,7 @@ function GrowthStockFlowView({ onComplete, onBuyClick, onQuestionClick }: { onCo
 
   return (
     <>
-      <ThinkingProcessCard steps={steps} step={step} completed={allStepsCompleted} />
+      <ThinkingProcessCard steps={steps} step={step} completed={allStepsCompleted} avatarSrc={AGENTS.quant.avatar} />
 
       {allStepsCompleted && (
         <>
@@ -2429,7 +2448,7 @@ function TrendFollowingFlowView({ onComplete, onBuyClick, onAddToWatchlist }: { 
 
   return (
     <>
-      <ThinkingProcessCard steps={steps} step={step} completed={allStepsCompleted} />
+      <ThinkingProcessCard steps={steps} step={step} completed={allStepsCompleted} avatarSrc={AGENTS.quant.avatar} />
 
       {allStepsCompleted && (
         <>
@@ -2576,15 +2595,37 @@ const getBriefReasonText = (facts?: string[]) => {
   return facts.slice(0, 2).join('，');
 };
 
+const getTopFactorBriefText = (factors?: { label: string; value: string }[]) => {
+  if (!factors || factors.length === 0) return '';
+
+  return factors
+    .slice(0, 2)
+    .map(factor => `${factor.label} ${factor.value.split('，')[0]}`)
+    .join('，');
+};
+
 function ModelSuggestedQuestions({ questions, onQuestionClick }: { questions: string[]; onQuestionClick?: (question: string) => void }) {
+  const [page, setPage] = useState(0);
   if (questions.length === 0) return null;
+
+  const visibleQuestions = Array.from({ length: Math.min(3, questions.length) }, (_, i) => questions[(page + i) % questions.length]);
 
   return (
     <div className="mt-4 space-y-2">
-      <div className="px-1 text-[11px] text-slate-500">继续按当前模型因子筛选</div>
-      {questions.slice(0, 3).map((question, i) => (
+      <div className="flex items-center justify-between px-1">
+        <div className="text-[11px] text-slate-500">按因子继续</div>
+        <button
+          type="button"
+          onClick={() => setPage(prev => (prev + 1) % questions.length)}
+          className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-slate-800/50 px-2 py-1 text-[10px] font-medium text-slate-400 hover:border-indigo-400/30 hover:text-indigo-200 transition-colors"
+        >
+          <ArrowRightLeft className="h-3 w-3" />
+          重新生成
+        </button>
+      </div>
+      {visibleQuestions.map((question, i) => (
         <motion.button
-          key={question}
+          key={`${question}-${page}`}
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.35 + i * 0.16 }}
@@ -2598,6 +2639,12 @@ function ModelSuggestedQuestions({ questions, onQuestionClick }: { questions: st
     </div>
   );
 }
+
+const QUANT_HOME_SUGGESTED_QUESTIONS = [
+  '股息率高、波动又小的股票有哪些？',
+  '筛选下估值不高、成长还不错的股票',
+  '产业增长好、个股营收也增长的股票有哪些？',
+];
 
 function MetricFactorFlowView({ config, onComplete, onBuyClick, onQuestionClick }: { config: MetricModelConfig; onComplete?: () => void; onBuyClick?: () => void; onQuestionClick?: (question: string) => void }) {
   const [step, setStep] = useState(0);
@@ -2620,7 +2667,7 @@ function MetricFactorFlowView({ config, onComplete, onBuyClick, onQuestionClick 
 
   return (
     <>
-      <ThinkingProcessCard steps={config.steps} step={step} completed={allStepsCompleted} />
+      <ThinkingProcessCard steps={config.steps} step={step} completed={allStepsCompleted} avatarSrc={AGENTS.quant.avatar} />
 
       {allStepsCompleted && (
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="space-y-3 mt-4">
@@ -2653,22 +2700,18 @@ function MetricFactorFlowView({ config, onComplete, onBuyClick, onQuestionClick 
               <div className="mb-3 relative z-10">
                 <div className="shrink-0 px-2 py-0.5 bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/30 rounded text-[10px] font-bold text-amber-400 mb-1 inline-block">入选理由</div>
                 {stock.industry && stock.industryChange && stock.industryMomentum && stock.detailReasonFactors ? (
-                  <div className="mt-1 space-y-1.5 text-xs">
-                    <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 text-slate-400">
-                      <span className="text-slate-100 font-semibold">{stock.industry}行业</span>
-                      <span>/</span>
-                      <span>涨幅 <span className="text-red-300 font-semibold tabular-nums">{stock.industryChange}</span></span>
-                      <span>/</span>
-                      <span>增速 <span className="text-red-300 font-semibold tabular-nums">{stock.industryMomentum}</span></span>
-                    </div>
-                    <div className="space-y-0.5">
-                      {stock.detailReasonFactors.slice(0, 3).map(factor => (
-                        <div key={factor.label} className="flex items-start justify-between gap-3 leading-relaxed">
-                          <span className="text-slate-500 shrink-0">{factor.label}</span>
-                          <span className="text-slate-300 text-right">{factor.value}</span>
-                        </div>
+                  <div className="mt-1 space-y-1.5 text-xs text-slate-400 leading-relaxed">
+                    <p>产业增长情况：{stock.industry}产业，涨幅为 {stock.industryChange}，增速为 {stock.industryMomentum}。</p>
+                    <p>
+                      个股增长情况：
+                      {stock.detailReasonFactors.slice(0, 3).map((factor, i) => (
+                        <React.Fragment key={factor.label}>
+                          {i > 0 ? '；' : ''}
+                          {factor.label}为 {factor.value}
+                        </React.Fragment>
                       ))}
-                    </div>
+                      。
+                    </p>
                   </div>
                 ) : stock.detailReasonText ? (
                   <p className="text-xs text-slate-400 leading-relaxed">{stock.detailReasonText}</p>
@@ -2731,9 +2774,9 @@ const METRIC_MODEL_CONFIGS: Record<string, MetricModelConfig> = {
       { name: '格力电器', code: '000651', price: '39.35', change: '+0.92%', changeUp: true, metrics: [{ label: '5日涨幅', value: '+2.8%', tone: 'red' }, { label: 'PE', value: '8.9x', tone: 'amber' }, { label: 'PEG', value: '0.69', tone: 'emerald' }], reasonFacts: ['PE (TTM) 8.9x', '归母净利润 90.0 亿元，增速为 13.8%'], detailReasonText: '滚动市盈率（PE TTM）为 8.9x，市净率为 1.86x，市盈增长比率（PEG）为 0.69，扣非净利润为 86.3 亿元、增速为 11.4%。', reason: '滚动市盈率 8.9x，滚动市盈率历史百分位 16%；市盈增长比率（PEG）0.69，市净率历史百分位 24%。' },
     ],
     suggestedQuestions: [
-      '继续筛选PE历史百分位低于20%的股票',
-      '继续筛选PEG低于1且扣非净利润同比为正的股票',
-      '继续筛选PB历史百分位低于25%的股票',
+      '筛选下 PE 和 PEG 都不高的股票',
+      '再看看估值低但 ROE 还不错的股票',
+      '只看扣非利润增长、估值又不贵的股票',
     ],
   },
   '产业景气度选股': {
@@ -2745,14 +2788,14 @@ const METRIC_MODEL_CONFIGS: Record<string, MetricModelConfig> = {
       { title: '龙头个股映射', icon: <Target className="w-4 h-4" />, desc: <div className="text-xs text-slate-400">在高景气产业内筛选流动性和财务指标满足条件的个股。</div> },
     ],
     stocks: [
-      { name: '中际旭创', code: '300308', price: '86.42', change: '+3.21%', changeUp: true, industry: '通信', industryChange: '+18.4%', industryMomentum: '+3.2%', stockFactors: [{ label: '营收同比增长率', value: '+54%' }, { label: '净资产收益率', value: '6.8%' }], metrics: [{ label: '5日涨幅', value: '+12.8%', tone: 'red' }, { label: '净利润', value: '12.4亿', tone: 'blue' }, { label: '同比增长', value: '+62%', tone: 'emerald' }], detailReasonFactors: [{ label: '营收增速', value: '32.8 亿 / +54%' }, { label: '销售毛利率', value: '21.6%' }, { label: '均线状态', value: 'MA20 > MA60' }], detailReasonText: '通信行业 / 涨幅 +18.4% / 增速 +3.2%。个股信息：营收增速 32.8 亿 / +54%，销售毛利率 21.6%，均线状态 MA20 > MA60。', reason: '所属行业：通信；光模块产业扣非净利润增长率 +62%，产业综合涨跌幅 +18.4%，净资产收益率（单季度）6.8%。' },
-      { name: '北方华创', code: '002371', price: '312.60', change: '+2.48%', changeUp: true, industry: '电子', industryChange: '+13.6%', industryMomentum: '+2.4%', stockFactors: [{ label: '市盈率', value: '42.5' }, { label: '销售毛利率', value: '44.2%' }], metrics: [{ label: '5日涨幅', value: '+8.6%', tone: 'red' }, { label: '净利润', value: '10.8亿', tone: 'blue' }, { label: '同比增长', value: '+47%', tone: 'emerald' }], detailReasonFactors: [{ label: '营收增速', value: '56.3 亿 / +38%' }, { label: '销售毛利率', value: '44.2%' }, { label: '均线状态', value: 'MA20 > MA60' }], detailReasonText: '电子行业 / 涨幅 +13.6% / 增速 +2.4%。个股信息：营收增速 56.3 亿 / +38%，销售毛利率 44.2%，均线状态 MA20 > MA60。', reason: '所属行业：电子；半导体设备产业扣非净利润增长率 +47%，产业综合涨跌幅 +13.6%，净资产收益率（单季度）5.9%。' },
-      { name: '阳光电源', code: '300274', price: '81.56', change: '+1.76%', changeUp: true, industry: '电力设备', industryChange: '+11.2%', industryMomentum: '+1.8%', stockFactors: [{ label: '营收同比增长率', value: '+31%' }, { label: '市盈率增长比率', value: '0.86' }], metrics: [{ label: '5日涨幅', value: '+6.4%', tone: 'red' }, { label: '净利润', value: '9.6亿', tone: 'blue' }, { label: '同比增长', value: '+39%', tone: 'emerald' }], detailReasonFactors: [{ label: '营收增速', value: '81.6 亿 / +31%' }, { label: 'PEG', value: '0.86' }, { label: '均线状态', value: 'MA20 > MA60' }], detailReasonText: '电力设备行业 / 涨幅 +11.2% / 增速 +1.8%。个股信息：营收增速 81.6 亿 / +31%，PEG 0.86，均线状态 MA20 > MA60。', reason: '所属行业：电力设备；逆变器产业扣非净利润增长率 +39%，产业综合涨跌幅 +11.2%，净资产收益率（单季度）5.4%。' },
+      { name: '中际旭创', code: '300308', price: '86.42', change: '+3.21%', changeUp: true, industry: '通信', industryChange: '+18.4%', industryMomentum: '+3.2%', stockFactors: [{ label: '营收同比增长率', value: '+54%' }, { label: '净资产收益率', value: '6.8%' }], metrics: [{ label: '5日涨幅', value: '+12.8%', tone: 'red' }, { label: '净利润', value: '12.4亿', tone: 'blue' }, { label: '同比增长', value: '+62%', tone: 'emerald' }], detailReasonFactors: [{ label: '营收增速', value: '32.8 亿 / +54%，产业内前 16%' }, { label: '销售毛利率', value: '21.6%，产业内前 28%' }, { label: '利润加速度', value: '+18%，产业内前 20%' }], detailReasonText: '产业增长情况：通信产业，涨幅为 +18.4%，增速为 +3.2%。个股增长情况：营收增速为 32.8 亿元 / +54%，产业内前 16%；销售毛利率为 21.6%，产业内前 28%；利润加速度为 +18%，产业内前 20%。', reason: '所属行业：通信；光模块产业扣非净利润增长率 +62%，产业综合涨跌幅 +18.4%，净资产收益率（单季度）6.8%。' },
+      { name: '北方华创', code: '002371', price: '312.60', change: '+2.48%', changeUp: true, industry: '电子', industryChange: '+13.6%', industryMomentum: '+2.4%', stockFactors: [{ label: '市盈率', value: '42.5' }, { label: '销售毛利率', value: '44.2%' }], metrics: [{ label: '5日涨幅', value: '+8.6%', tone: 'red' }, { label: '净利润', value: '10.8亿', tone: 'blue' }, { label: '同比增长', value: '+47%', tone: 'emerald' }], detailReasonFactors: [{ label: '销售毛利率', value: '44.2%，产业内前 12%' }, { label: '营收增速', value: '56.3 亿 / +38%，产业内前 22%' }, { label: '净资产收益率', value: '5.9%，产业内前 35%' }], detailReasonText: '产业增长情况：电子产业，涨幅为 +13.6%，增速为 +2.4%。个股增长情况：销售毛利率为 44.2%，产业内前 12%；营收增速为 56.3 亿元 / +38%，产业内前 22%；净资产收益率为 5.9%，产业内前 35%。', reason: '所属行业：电子；半导体设备产业扣非净利润增长率 +47%，产业综合涨跌幅 +13.6%，净资产收益率（单季度）5.9%。' },
+      { name: '阳光电源', code: '300274', price: '81.56', change: '+1.76%', changeUp: true, industry: '电力设备', industryChange: '+11.2%', industryMomentum: '+1.8%', stockFactors: [{ label: '营收同比增长率', value: '+31%' }, { label: '市盈率增长比率', value: '0.86' }], metrics: [{ label: '5日涨幅', value: '+6.4%', tone: 'red' }, { label: '净利润', value: '9.6亿', tone: 'blue' }, { label: '同比增长', value: '+39%', tone: 'emerald' }], detailReasonFactors: [{ label: '市盈率增长比率', value: '0.86，产业内前 30%' }, { label: '营收增速', value: '81.6 亿 / +31%，产业内前 26%' }, { label: '净资产收益率', value: '5.4%，产业内前 38%' }], detailReasonText: '产业增长情况：电力设备产业，涨幅为 +11.2%，增速为 +1.8%。个股增长情况：市盈率增长比率为 0.86，产业内前 30%；营收增速为 81.6 亿元 / +31%，产业内前 26%；净资产收益率为 5.4%，产业内前 38%。', reason: '所属行业：电力设备；逆变器产业扣非净利润增长率 +39%，产业综合涨跌幅 +11.2%，净资产收益率（单季度）5.4%。' },
     ],
     suggestedQuestions: [
-      '继续筛选一级产业景气度排名前5的股票',
-      '继续筛选二级产业广度高于40%的股票',
-      '继续筛选产业指数近20日涨跌幅排名前30%的股票',
+      '筛选下所属产业涨幅和增速都靠前的股票',
+      '再看看产业增长好、营收增速也快的股票',
+      '只看销售毛利率高且产业内排名靠前的股票',
     ],
   },
   '新兴产业+成长股模型': {
@@ -2764,14 +2807,14 @@ const METRIC_MODEL_CONFIGS: Record<string, MetricModelConfig> = {
       { title: '加速度确认', icon: <Activity className="w-4 h-4" />, desc: <div className="text-xs text-slate-400">保留收入增速加速度和净利润增速加速度为正的股票。</div> },
     ],
     stocks: [
-      { name: '新易盛', code: '300502', price: '72.00', change: '+2.16%', changeUp: true, industry: '通信', industryChange: '+18.4%', industryMomentum: '+3.2%', metrics: [{ label: '营收', value: '28.6亿', tone: 'blue' }, { label: '净利润', value: '8.2亿', tone: 'red' }, { label: '净利润同比增长', value: '+88%', tone: 'emerald' }], reasonFacts: ['净利润 8.2 亿，增速 88%', '净利润增速加速度 21%'], detailReasonFactors: [{ label: '净利加速度', value: '+21%' }, { label: '营收加速度', value: '+12%' }, { label: 'PEG', value: '0.82' }], detailReasonText: '通信行业 / 涨幅 +18.4% / 增速 +3.2%。个股信息：净利加速度 +21%，营收加速度 +12%，PEG 0.82。', reason: '营业收入同比增长率 +54%，净利润同比增长率 +88%；营业收入增速加速度 +12%，净利润增速加速度 +21%。' },
-      { name: '汇川技术', code: '300124', price: '58.40', change: '+1.34%', changeUp: true, industry: '电力设备', industryChange: '+11.2%', industryMomentum: '+1.8%', metrics: [{ label: '营收', value: '64.5亿', tone: 'blue' }, { label: '净利润', value: '11.3亿', tone: 'red' }, { label: '净利润同比增长', value: '+36%', tone: 'emerald' }], reasonFacts: ['营业收入 64.5 亿，增速 31%', '净资产收益率 17.5%'], detailReasonFactors: [{ label: '净利加速度', value: '+10%' }, { label: '营收加速度', value: '+8%' }, { label: 'ROE', value: '17.5%' }], detailReasonText: '电力设备行业 / 涨幅 +11.2% / 增速 +1.8%。个股信息：净利加速度 +10%，营收加速度 +8%，ROE 17.5%。', reason: '营业收入同比增长率 +31%，净利润同比增长率 +36%；营业收入增速加速度 +8%，净利润增速加速度 +10%。' },
-      { name: '药明康德', code: '603259', price: '52.18', change: '+1.08%', changeUp: true, industry: '医药生物', industryChange: '+7.6%', industryMomentum: '+1.1%', metrics: [{ label: '营收', value: '91.8亿', tone: 'blue' }, { label: '净利润', value: '19.6亿', tone: 'red' }, { label: '净利润同比增长', value: '+29%', tone: 'emerald' }], reasonFacts: ['净利润 19.6 亿，增速 29%', 'PEG 0.94'], detailReasonFactors: [{ label: 'PEG', value: '0.94' }, { label: 'ROE', value: '21.4%' }, { label: '营收加速度', value: '+6%' }], detailReasonText: '医药生物行业 / 涨幅 +7.6% / 增速 +1.1%。个股信息：PEG 0.94，ROE 21.4%，营收加速度 +6%。', reason: '营业收入同比增长率 +24%，净利润同比增长率 +29%；营业收入增速加速度 +6%，净利润增速加速度 +9%。' },
+      { name: '新易盛', code: '300502', price: '72.00', change: '+2.16%', changeUp: true, industry: '通信', industryChange: '+18.4%', industryMomentum: '+3.2%', metrics: [{ label: '近5日涨幅', value: '+16.8%', tone: 'red' }, { label: 'PE', value: '31.6x', tone: 'amber' }, { label: '成长评分', value: '92', tone: 'emerald' }], reasonFacts: ['净利润 8.2 亿，增速 88%', '净利润增速加速度 21%'], detailReasonFactors: [{ label: '净利加速度', value: '+21%，产业内前 18%' }, { label: '营收加速度', value: '+12%，产业内前 25%' }, { label: 'PEG', value: '0.82，产业内前 30%' }], detailReasonText: '产业增长情况：通信产业，涨幅为 +18.4%，增速为 +3.2%。个股增长情况：净利加速度为 +21%，产业内前 18%；营收加速度为 +12%，产业内前 25%；PEG 为 0.82，产业内前 30%。', reason: '营业收入同比增长率 +54%，净利润同比增长率 +88%；营业收入增速加速度 +12%，净利润增速加速度 +21%。' },
+      { name: '汇川技术', code: '300124', price: '58.40', change: '+1.34%', changeUp: true, industry: '电力设备', industryChange: '+11.2%', industryMomentum: '+1.8%', metrics: [{ label: '近5日涨幅', value: '+9.4%', tone: 'red' }, { label: 'PE', value: '28.3x', tone: 'amber' }, { label: '成长评分', value: '86', tone: 'emerald' }], reasonFacts: ['营业收入 64.5 亿，增速 31%', '净资产收益率 17.5%'], detailReasonFactors: [{ label: '净利加速度', value: '+10%，产业内前 24%' }, { label: '营收加速度', value: '+8%，产业内前 31%' }, { label: '净资产收益率', value: '17.5%，产业内前 20%' }], detailReasonText: '产业增长情况：电力设备产业，涨幅为 +11.2%，增速为 +1.8%。个股增长情况：净利加速度为 +10%，产业内前 24%；营收加速度为 +8%，产业内前 31%；净资产收益率为 17.5%，产业内前 20%。', reason: '营业收入同比增长率 +31%，净利润同比增长率 +36%；营业收入增速加速度 +8%，净利润增速加速度 +10%。' },
+      { name: '药明康德', code: '603259', price: '52.18', change: '+1.08%', changeUp: true, industry: '医药生物', industryChange: '+7.6%', industryMomentum: '+1.1%', metrics: [{ label: '近5日涨幅', value: '+5.8%', tone: 'red' }, { label: 'PE', value: '24.9x', tone: 'amber' }, { label: '成长评分', value: '81', tone: 'emerald' }], reasonFacts: ['净利润 19.6 亿，增速 29%', 'PEG 0.94'], detailReasonFactors: [{ label: 'PEG', value: '0.94，产业内前 28%' }, { label: '净资产收益率', value: '21.4%，产业内前 16%' }, { label: '营收加速度', value: '+6%，产业内前 35%' }], detailReasonText: '产业增长情况：医药生物产业，涨幅为 +7.6%，增速为 +1.1%。个股增长情况：PEG 为 0.94，产业内前 28%；净资产收益率为 21.4%，产业内前 16%；营收加速度为 +6%，产业内前 35%。', reason: '营业收入同比增长率 +24%，净利润同比增长率 +29%；营业收入增速加速度 +6%，净利润增速加速度 +9%。' },
     ],
     suggestedQuestions: [
-      '继续筛选营业收入和净利润同比增速均为正的股票',
-      '继续筛选营收增速加速度和净利润增速加速度均为正的股票',
-      '继续筛选PEG低且个股中期价格动量靠前的股票',
+      '筛选下新兴产业里近 5 日涨幅靠前的股票',
+      '再看看 PE 和成长评分更匹配的股票',
+      '只看成长评分高、短期表现靠前的股票',
     ],
   },
 };
@@ -2936,14 +2979,14 @@ function DividendFlowView({ onComplete, onBuyClick, onQuestionClick }: { onCompl
   ];
 
   const suggestedQuestions = [
-    '继续筛选股息率TTM高于4%的股票',
-    '继续筛选近1年年化波动率低于20%的股票',
-    '继续筛选ROE近3年均值高于12%的股票',
+    '筛选下股息率更高且连续分红的股票',
+    '再看看分红更稳定、股价波动更小的股票',
+    '只看 ROE 表现稳定且年化波动率更低的股票',
   ];
 
   return (
     <>
-      <ThinkingProcessCard steps={steps} step={step} completed={allStepsCompleted} />
+      <ThinkingProcessCard steps={steps} step={step} completed={allStepsCompleted} avatarSrc={AGENTS.quant.avatar} />
 
       {allStepsCompleted && (
         <>
@@ -3187,7 +3230,7 @@ function MomentumFlowView({ onComplete, onBuyClick, initialCompleted }: { onComp
 
   return (
     <>
-      <ThinkingProcessCard steps={steps} step={step} completed={allStepsCompleted} />
+      <ThinkingProcessCard steps={steps} step={step} completed={allStepsCompleted} avatarSrc={AGENTS.quant.avatar} />
 
       {allStepsCompleted && (
         <>
@@ -3395,7 +3438,7 @@ function WuguEventFlowView({ onComplete, onViewOtherStrategies, onBuyClick }: { 
 
   return (
     <>
-      <ThinkingProcessCard steps={steps} step={step} completed={allStepsCompleted} />
+      <ThinkingProcessCard steps={steps} step={step} completed={allStepsCompleted} avatarSrc={AGENTS.quant.avatar} />
 
     {allStepsCompleted && (
       <>
@@ -3688,12 +3731,11 @@ function WatchlistDrawer({ onClose }: { onClose: () => void }) {
       {/* 内容区 */}
       <div className="flex-1 flex items-center gap-3 px-5 pb-5 min-h-0">
         {/* 左：虚拟人视频（无外框，直接放置） */}
-        <video
-          src="/对话页虚拟人/炒股参谋对话虚拟人.mov"
+        <AgentMedia
+          src={炒股参谋引导动画}
+          poster={AGENTS.quant.avatar}
           className="shrink-0 w-20 h-24 object-cover"
-          autoPlay
-          muted
-          playsInline
+          loop
         />
 
         {/* 右：气泡 */}
@@ -4448,13 +4490,23 @@ function ChatView({ agent, initialPrompt, onExit, onViewProfile, onBuyClick }: {
             </div>
             <div className="p-5 flex-1 space-y-3">
               {METRIC_MODEL_CONFIGS['新兴产业+成长股模型'].stocks.map(stock => (
-                <div key={stock.code} className="bg-slate-900/60 rounded-lg p-2.5 border border-white/5 flex flex-col gap-2">
+                <div key={stock.code} className="bg-slate-900/60 hover:bg-slate-900/65 rounded-lg p-2.5 border border-white/5 hover:border-indigo-400/20 transition-colors flex flex-col gap-2">
                   <div className="flex justify-between items-center px-1">
-                    <span className="text-sm font-bold text-slate-200">{stock.name} <span className="text-xs text-slate-500 font-mono">{stock.code}</span></span>
+                    <span className="flex min-w-0 items-center gap-1.5 text-sm font-bold text-slate-200">
+                      <span>{stock.name}</span>
+                      <span className="text-xs text-slate-500 font-mono">{stock.code}</span>
+                      {stock.industry && (
+                        <span className="rounded-md bg-indigo-500/15 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-indigo-200">
+                          {stock.industry}
+                        </span>
+                      )}
+                    </span>
                     <span className={`text-sm font-bold ${stock.changeUp ? 'text-red-400' : 'text-emerald-400'}`}>{stock.change}</span>
                   </div>
                   <div className="px-2 py-1.5 rounded border border-indigo-500/20 bg-indigo-500/10">
-                    <span className="block truncate text-[11px] text-indigo-200/90">{(stock.reasonFacts ?? []).slice(0, 2).join('，')}</span>
+                    <span className="block truncate text-[11px] text-indigo-200/90">
+                      {getTopFactorBriefText(stock.detailReasonFactors)}
+                    </span>
                   </div>
                 </div>
               ))}
@@ -4488,6 +4540,21 @@ function ChatView({ agent, initialPrompt, onExit, onViewProfile, onBuyClick }: {
             />
           ))}
         </div>
+        <div className="px-1 space-y-2">
+          <div className="text-[11px] text-slate-500">推荐问题</div>
+          <div className="space-y-2">
+            {QUANT_HOME_SUGGESTED_QUESTIONS.map(question => (
+              <button
+                key={question}
+                type="button"
+                onClick={() => handlePromptClick(question)}
+                className="w-full rounded-xl border border-white/10 bg-slate-800/45 px-3.5 py-3 text-left text-xs leading-snug text-slate-300 transition-colors hover:border-indigo-500/35 hover:bg-slate-700/60 hover:text-white"
+              >
+                {question}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
     );
   };
@@ -4497,6 +4564,7 @@ function ChatView({ agent, initialPrompt, onExit, onViewProfile, onBuyClick }: {
     : agent.id === 'wealth'
       ? ['推荐更多产品', '产品评价', '产品对比']
       : [];
+  const isQuantModelDetail = agent.id === 'quant' && Boolean(activeQuantModel || showWuguEventFlow || showEventDrivenFlow);
 
   return (
     <motion.div 
@@ -4540,6 +4608,7 @@ function ChatView({ agent, initialPrompt, onExit, onViewProfile, onBuyClick }: {
       >
         
         {/* Hero Section (Normal flow, fades out on scroll to prevent jitter) */}
+        {!isQuantModelDetail && (
         <div className={`px-6 pt-20 pb-8 flex justify-between items-start relative transition-opacity duration-300 ${scrollY > 40 ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
           <div className="z-10 pt-4">
             <h2 className="text-2xl font-bold text-slate-100 flex items-center gap-2 drop-shadow-md">
@@ -4608,40 +4677,33 @@ function ChatView({ agent, initialPrompt, onExit, onViewProfile, onBuyClick }: {
           </div>
           <div className="relative w-28 h-28 shrink-0">
             {agent.id === 'wealth' ? (
-              <video
+              <AgentMedia
                 src="/对话页虚拟人/产品买手对话虚拟人.mov"
+                poster={agent.avatar}
                 className="w-28 h-28 object-cover"
-                autoPlay
-                muted
-                playsInline
-                loop={false}
               />
             ) : agent.id === 'quant' ? (
-              <video
-                src="/对话页虚拟人/炒股参谋对话虚拟人.mov"
+              <AgentMedia
+                src={炒股参谋引导动画}
+                poster={agent.avatar}
                 className="w-28 h-28 object-cover"
-                autoPlay
-                muted
-                playsInline
-                loop={false}
+                loop
               />
             ) : agent.id === 'advisor' ? (
-              <video
+              <AgentMedia
                 src="/对话页虚拟人/投顾猎头对话虚拟人.mov"
+                poster={agent.avatar}
                 className="w-28 h-28 object-cover"
-                autoPlay
-                muted
-                playsInline
-                loop={false}
               />
             ) : (
               <img src={agent.avatar} className="w-28 h-28 object-cover rounded-full border-2 border-white/10 shadow-lg" referrerPolicy="no-referrer" alt="" />
             )}
           </div>
         </div>
+        )}
 
         {/* Content Area */}
-        <div className="px-4 space-y-4 relative z-20 -mt-4">
+        <div className={`px-4 space-y-4 relative z-20 ${isQuantModelDetail ? 'pt-20' : '-mt-4'}`}>
           
           {agent.id === 'wealth' && renderWealthContent()}
           {agent.id === 'advisor' && renderAdvisorContent()}
