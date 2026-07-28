@@ -16,6 +16,7 @@ import {
   TrendingUp,
   ShieldAlert,
   MessageCircle,
+  History,
   ArrowRightLeft,
   ArrowRight,
   UserCheck,
@@ -86,6 +87,25 @@ interface AdvisorProfileData {
   tags: string[];
   company: string;
   articles: { title: string; views: string; likes: string; image: string; isVideo?: boolean }[];
+}
+
+function PhoneStatusBar() {
+  return (
+    <div className="pointer-events-none absolute left-0 right-0 top-0 z-[80] flex h-9 items-center justify-between px-8 pt-1 text-[12px] font-semibold text-slate-100">
+      <span className="tabular-nums">9:41</span>
+      <div className="flex items-center gap-1.5">
+        <div className="flex h-3.5 items-end gap-0.5">
+          {[4, 6, 8, 10].map(height => (
+            <span key={height} className="w-0.5 rounded-full bg-slate-100" style={{ height }} />
+          ))}
+        </div>
+        <div className="relative h-3 w-5 rounded-[3px] border border-slate-100/90">
+          <span className="absolute -right-1 top-1 h-1 w-0.5 rounded-r bg-slate-100/90" />
+          <span className="absolute inset-y-0.5 left-0.5 w-3.5 rounded-[2px] bg-slate-100" />
+        </div>
+      </div>
+    </div>
+  );
 }
 
 type ThinkingStep = {
@@ -330,9 +350,10 @@ export default function App() {
 
       {/* Mobile Phone Frame */}
       <div className="w-[390px] h-[844px] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-800 via-slate-900 to-slate-950 rounded-[3rem] border-[12px] border-slate-950 relative overflow-hidden flex flex-col shadow-[0_20px_50px_rgba(0,0,0,0.7)] ring-1 ring-white/10">
+        <PhoneStatusBar />
         
         {/* Hardware Notch / Dynamic Island */}
-        <div className="absolute top-0 inset-x-0 h-6 flex justify-center z-50">
+        <div className="absolute top-0 inset-x-0 h-6 flex justify-center z-[90]">
           <div className="w-32 h-6 bg-slate-950 rounded-b-3xl shadow-[inset_0_-2px_4px_rgba(255,255,255,0.05)]"></div>
         </div>
 
@@ -955,6 +976,73 @@ function UserDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () => void 
                 <LogOut className="w-4 h-4" />
                 <span>退出登录</span>
               </button>
+            </div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
+  );
+}
+
+const QUANT_HISTORY_RECORDS = [
+  { title: '高股息低波动股票', time: '今天 09:28', summary: '股息率高、波动又小的股票有哪些？' },
+  { title: '低估值成长组合', time: '昨天 16:42', summary: '筛选下估值不高、成长还不错的股票' },
+  { title: '产业景气度选股', time: '昨天 11:05', summary: '产业增长好、个股营收也增长的股票有哪些？' },
+  { title: '新兴产业成长股', time: '07-26 14:18', summary: '只看成长评分高、短期表现靠前的股票' },
+];
+
+function QuantHistoryDrawer({ isOpen, onClose, onSelect }: { isOpen: boolean; onClose: () => void; onSelect: (question: string) => void }) {
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="absolute inset-0 z-[72] bg-slate-950/55 backdrop-blur-[2px]"
+          />
+          <motion.div
+            initial={{ x: '-100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '-100%' }}
+            transition={{ duration: 0.24, ease: 'easeOut' }}
+            className="absolute bottom-0 left-0 top-0 z-[73] flex w-[82%] max-w-[320px] flex-col border-r border-white/10 bg-slate-900/98 shadow-2xl"
+          >
+            <div className="border-b border-white/5 px-5 pb-4 pt-14">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <div className="text-base font-bold text-slate-100">历史对话</div>
+                  <div className="mt-1 text-[11px] text-slate-500">继续查看之前的选股记录</div>
+                </div>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="h-8 w-8 rounded-full bg-white/5 text-slate-400 transition-colors hover:bg-white/10 hover:text-white"
+                >
+                  <X className="mx-auto h-4 w-4" />
+                </button>
+              </div>
+            </div>
+            <div className="flex-1 space-y-2 overflow-y-auto px-3 py-3 scrollbar-hide">
+              {QUANT_HISTORY_RECORDS.map(record => (
+                <button
+                  key={`${record.title}-${record.time}`}
+                  type="button"
+                  onClick={() => {
+                    onSelect(record.summary);
+                    onClose();
+                  }}
+                  className="w-full rounded-2xl border border-white/10 bg-slate-800/45 px-3.5 py-3 text-left transition-colors hover:border-blue-400/25 hover:bg-slate-800/75"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-sm font-semibold text-slate-100">{record.title}</span>
+                    <span className="shrink-0 text-[10px] text-slate-500">{record.time}</span>
+                  </div>
+                  <div className="mt-1.5 line-clamp-2 text-[11px] leading-relaxed text-slate-400">{record.summary}</div>
+                </button>
+              ))}
             </div>
           </motion.div>
         </>
@@ -2567,6 +2655,7 @@ type MetricStock = {
   detailReasonText?: string;
   detailReasonFactors?: { label: string; value: string }[];
   detailReasonFacts?: string[];
+  score?: string;
   metrics: { label: string; value: string; tone?: 'blue' | 'red' | 'emerald' | 'amber' }[];
   reason: string;
 };
@@ -2613,7 +2702,7 @@ function ModelSuggestedQuestions({ questions, onQuestionClick }: { questions: st
   return (
     <div className="mt-4 space-y-2">
       <div className="flex items-center justify-between px-1">
-        <div className="text-[11px] text-slate-500">按因子继续</div>
+        <div className="text-[11px] text-slate-500">继续筛选</div>
         <button
           type="button"
           onClick={() => setPage(prev => (prev + 1) % questions.length)}
@@ -2698,7 +2787,14 @@ function MetricFactorFlowView({ config, onComplete, onBuyClick, onQuestionClick 
               </div>
 
               <div className="mb-3 relative z-10">
-                <div className="shrink-0 px-2 py-0.5 bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/30 rounded text-[10px] font-bold text-amber-400 mb-1 inline-block">入选理由</div>
+                <div className="mb-1 flex items-center justify-between gap-3">
+                  <div className="shrink-0 px-2 py-0.5 bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/30 rounded text-[10px] font-bold text-amber-400 inline-block">入选理由</div>
+                  {stock.score && (
+                    <div className="rounded-full border border-white/10 bg-slate-800/45 px-2 py-0.5 text-[11px] font-semibold leading-5 tabular-nums text-slate-400">
+                      {stock.score}分
+                    </div>
+                  )}
+                </div>
                 {stock.industry && stock.industryChange && stock.industryMomentum && stock.detailReasonFactors ? (
                   <div className="mt-1 space-y-1.5 text-xs text-slate-400 leading-relaxed">
                     <p>产业增长情况：{stock.industry}产业，涨幅为 {stock.industryChange}，增速为 {stock.industryMomentum}。</p>
@@ -2807,9 +2903,9 @@ const METRIC_MODEL_CONFIGS: Record<string, MetricModelConfig> = {
       { title: '加速度确认', icon: <Activity className="w-4 h-4" />, desc: <div className="text-xs text-slate-400">保留收入增速加速度和净利润增速加速度为正的股票。</div> },
     ],
     stocks: [
-      { name: '新易盛', code: '300502', price: '72.00', change: '+2.16%', changeUp: true, industry: '通信', industryChange: '+18.4%', industryMomentum: '+3.2%', metrics: [{ label: '近5日涨幅', value: '+16.8%', tone: 'red' }, { label: 'PE', value: '31.6x', tone: 'amber' }, { label: '成长评分', value: '92', tone: 'emerald' }], reasonFacts: ['净利润 8.2 亿，增速 88%', '净利润增速加速度 21%'], detailReasonFactors: [{ label: '净利加速度', value: '+21%，产业内前 18%' }, { label: '营收加速度', value: '+12%，产业内前 25%' }, { label: 'PEG', value: '0.82，产业内前 30%' }], detailReasonText: '产业增长情况：通信产业，涨幅为 +18.4%，增速为 +3.2%。个股增长情况：净利加速度为 +21%，产业内前 18%；营收加速度为 +12%，产业内前 25%；PEG 为 0.82，产业内前 30%。', reason: '营业收入同比增长率 +54%，净利润同比增长率 +88%；营业收入增速加速度 +12%，净利润增速加速度 +21%。' },
-      { name: '汇川技术', code: '300124', price: '58.40', change: '+1.34%', changeUp: true, industry: '电力设备', industryChange: '+11.2%', industryMomentum: '+1.8%', metrics: [{ label: '近5日涨幅', value: '+9.4%', tone: 'red' }, { label: 'PE', value: '28.3x', tone: 'amber' }, { label: '成长评分', value: '86', tone: 'emerald' }], reasonFacts: ['营业收入 64.5 亿，增速 31%', '净资产收益率 17.5%'], detailReasonFactors: [{ label: '净利加速度', value: '+10%，产业内前 24%' }, { label: '营收加速度', value: '+8%，产业内前 31%' }, { label: '净资产收益率', value: '17.5%，产业内前 20%' }], detailReasonText: '产业增长情况：电力设备产业，涨幅为 +11.2%，增速为 +1.8%。个股增长情况：净利加速度为 +10%，产业内前 24%；营收加速度为 +8%，产业内前 31%；净资产收益率为 17.5%，产业内前 20%。', reason: '营业收入同比增长率 +31%，净利润同比增长率 +36%；营业收入增速加速度 +8%，净利润增速加速度 +10%。' },
-      { name: '药明康德', code: '603259', price: '52.18', change: '+1.08%', changeUp: true, industry: '医药生物', industryChange: '+7.6%', industryMomentum: '+1.1%', metrics: [{ label: '近5日涨幅', value: '+5.8%', tone: 'red' }, { label: 'PE', value: '24.9x', tone: 'amber' }, { label: '成长评分', value: '81', tone: 'emerald' }], reasonFacts: ['净利润 19.6 亿，增速 29%', 'PEG 0.94'], detailReasonFactors: [{ label: 'PEG', value: '0.94，产业内前 28%' }, { label: '净资产收益率', value: '21.4%，产业内前 16%' }, { label: '营收加速度', value: '+6%，产业内前 35%' }], detailReasonText: '产业增长情况：医药生物产业，涨幅为 +7.6%，增速为 +1.1%。个股增长情况：PEG 为 0.94，产业内前 28%；净资产收益率为 21.4%，产业内前 16%；营收加速度为 +6%，产业内前 35%。', reason: '营业收入同比增长率 +24%，净利润同比增长率 +29%；营业收入增速加速度 +6%，净利润增速加速度 +9%。' },
+      { name: '新易盛', code: '300502', price: '72.00', change: '+2.16%', changeUp: true, industry: '通信', industryChange: '+18.4%', industryMomentum: '+3.2%', score: '92', metrics: [{ label: '近5日涨幅', value: '+16.8%', tone: 'red' }, { label: '净利润', value: '8.2亿', tone: 'blue' }, { label: '同比增长', value: '+88%', tone: 'emerald' }], reasonFacts: ['净利润 8.2 亿，增速 88%', '净利润增速加速度 21%'], detailReasonFactors: [{ label: '净利加速度', value: '+21%，产业内前 18%' }, { label: '营收加速度', value: '+12%，产业内前 25%' }, { label: 'PEG', value: '0.82，产业内前 30%' }], detailReasonText: '产业增长情况：通信产业，涨幅为 +18.4%，增速为 +3.2%。个股增长情况：净利加速度为 +21%，产业内前 18%；营收加速度为 +12%，产业内前 25%；PEG 为 0.82，产业内前 30%。', reason: '营业收入同比增长率 +54%，净利润同比增长率 +88%；营业收入增速加速度 +12%，净利润增速加速度 +21%。' },
+      { name: '汇川技术', code: '300124', price: '58.40', change: '+1.34%', changeUp: true, industry: '电力设备', industryChange: '+11.2%', industryMomentum: '+1.8%', score: '86', metrics: [{ label: '近5日涨幅', value: '+9.4%', tone: 'red' }, { label: '净利润', value: '12.8亿', tone: 'blue' }, { label: '同比增长', value: '+36%', tone: 'emerald' }], reasonFacts: ['营业收入 64.5 亿，增速 31%', '净资产收益率 17.5%'], detailReasonFactors: [{ label: '净利加速度', value: '+10%，产业内前 24%' }, { label: '营收加速度', value: '+8%，产业内前 31%' }, { label: '净资产收益率', value: '17.5%，产业内前 20%' }], detailReasonText: '产业增长情况：电力设备产业，涨幅为 +11.2%，增速为 +1.8%。个股增长情况：净利加速度为 +10%，产业内前 24%；营收加速度为 +8%，产业内前 31%；净资产收益率为 17.5%，产业内前 20%。', reason: '营业收入同比增长率 +31%，净利润同比增长率 +36%；营业收入增速加速度 +8%，净利润增速加速度 +10%。' },
+      { name: '药明康德', code: '603259', price: '52.18', change: '+1.08%', changeUp: true, industry: '医药生物', industryChange: '+7.6%', industryMomentum: '+1.1%', score: '81', metrics: [{ label: '近5日涨幅', value: '+5.8%', tone: 'red' }, { label: '净利润', value: '19.6亿', tone: 'blue' }, { label: '同比增长', value: '+29%', tone: 'emerald' }], reasonFacts: ['净利润 19.6 亿，增速 29%', 'PEG 0.94'], detailReasonFactors: [{ label: 'PEG', value: '0.94，产业内前 28%' }, { label: '净资产收益率', value: '21.4%，产业内前 16%' }, { label: '营收加速度', value: '+6%，产业内前 35%' }], detailReasonText: '产业增长情况：医药生物产业，涨幅为 +7.6%，增速为 +1.1%。个股增长情况：PEG 为 0.94，产业内前 28%；净资产收益率为 21.4%，产业内前 16%；营收加速度为 +6%，产业内前 35%。', reason: '营业收入同比增长率 +24%，净利润同比增长率 +29%；营业收入增速加速度 +6%，净利润增速加速度 +9%。' },
     ],
     suggestedQuestions: [
       '筛选下新兴产业里近 5 日涨幅靠前的股票',
@@ -3807,36 +3903,10 @@ function ChatView({ agent, initialPrompt, onExit, onViewProfile, onBuyClick }: {
   const [quantCardIndex, setQuantCardIndex] = useState(0);
   const quantScrollRef = React.useRef<HTMLDivElement>(null);
   const [showWatchlistDrawer, setShowWatchlistDrawer] = useState(false);
+  const [showQuantHistoryDrawer, setShowQuantHistoryDrawer] = useState(false);
   const [inputMode, setInputMode] = useState<'keyboard' | 'voice'>('keyboard');
   const [isRecording, setIsRecording] = useState(false);
-  const [showFactorDrawer, setShowFactorDrawer] = useState(false);
-  const [selectedComposeModel, setSelectedComposeModel] = useState('新兴产业+成长股模型');
-  const [selectedAtomicModels, setSelectedAtomicModels] = useState<string[]>(['成长速度快']);
-  const [selectedFactors, setSelectedFactors] = useState<string[]>(['PE≤8']);
   const [toastText, setToastText] = useState('');
-
-  const composeModels = ['新兴产业+成长股模型', '低估值选股', '产业景气度选股', '高股息低波动模型', '趋势跟随模型'];
-  const atomicModelOptions = ['行业指数走势强', '新兴产业', '行业景气高', '成长速度快', '经营拐点', '研发投入高', '价格低波动', '盈利稳定', '收入稳定', '现金流稳定'];
-  const stockFactorOptions = [
-    { title: 'PE≤8', value: 'PE≤8', desc: '估值绝对值约束' },
-    { title: 'PEG≤0.5', value: 'PEG≤0.5', desc: '估值与成长匹配' },
-    { title: 'ROE≤0.05', value: 'ROE≤0.05', desc: '净资产收益率阈值' },
-    { title: '股息率 ≥ 6%', value: '股息率 ≥ 6%', desc: '分红收益约束' },
-    { title: '利润增速波动 ≤ 10', value: '利润增速波动 ≤ 10', desc: '利润增速稳定性' },
-    { title: '营收增速 ≥ 20%', value: '营收增速 ≥ 20%', desc: '收入增长阈值' },
-    { title: '扣非净利润 > 0', value: '扣非净利润 > 0', desc: '盈利方向过滤' },
-    { title: '研发费用率 ≥ 8%', value: '研发费用率 ≥ 8%', desc: '研发投入约束' },
-  ];
-
-  const toggleMultiSelect = (value: string, setter: React.Dispatch<React.SetStateAction<string[]>>) => {
-    setter(prev => prev.includes(value) ? prev.filter(item => item !== value) : [...prev, value]);
-  };
-
-  const buildComposeIntent = () => {
-    const atomicText = selectedAtomicModels.length > 0 ? selectedAtomicModels.join(' + ') : '默认原子模型';
-    const factorText = selectedFactors.length > 0 ? selectedFactors.join('、') : '默认因子';
-    return `请按「${selectedComposeModel} + ${atomicText}」自由组合筛选股票，条件包括：${factorText}。`;
-  };
 
   const showToast = (text: string) => {
     setToastText(text);
@@ -3907,34 +3977,11 @@ function ChatView({ agent, initialPrompt, onExit, onViewProfile, onBuyClick }: {
     return () => window.removeEventListener('reset-quant-model', handleReset);
   }, []);
 
-  const renderComposedStockResult = (text: string) => (
-    <div className="space-y-3">
-      <p>已按您的自由组合条件完成编排，当前优先调用 <span className="text-blue-300 font-medium">{selectedComposeModel}</span>，并叠加 {selectedAtomicModels.join('、') || '默认'} 因子复核。</p>
-      <div className="space-y-2">
-        {[
-          { name: '中际旭创', code: '300308', note: '净利润 12.4 亿，增速 62%；近20日涨幅 18.4%' },
-          { name: '汇川技术', code: '300124', note: 'ROE 17.5%；营业收入 64.5 亿，增速 31%' },
-          { name: '长江电力', code: '600900', note: '股息率 TTM 4.6%；近1年年化波动率 18.3%' },
-        ].map(stock => (
-          <div key={stock.code} className="rounded-xl border border-white/10 bg-slate-900/45 px-3 py-2">
-            <div className="flex items-center justify-between gap-2">
-              <span className="font-semibold text-slate-100">{stock.name}</span>
-              <span className="text-[11px] font-mono text-slate-500">{stock.code}</span>
-            </div>
-            <div className="mt-1 text-[11px] text-slate-400 leading-snug">{stock.note}</div>
-          </div>
-        ))}
-      </div>
-      <p className="text-[11px] text-slate-500">组合条件：{text.replace(/^请按/, '按')}</p>
-    </div>
-  );
-
   const handlePromptClick = (text: string) => {
-    const isComposedStockQuery = agent.id === 'quant' && /自由组合筛选股票|自由组合|组合筛选/.test(text);
     setChatHistory(prev => [
       ...prev,
       { role: 'user', content: text },
-      { role: 'agent', content: isComposedStockQuery ? renderComposedStockResult(text) : '好的，我正在为您分析并整理相关信息，请稍候...' }
+      { role: 'agent', content: '好的，我正在为您分析并整理相关信息，请稍候...' }
     ]);
   };
 
@@ -3943,13 +3990,6 @@ function ChatView({ agent, initialPrompt, onExit, onViewProfile, onBuyClick }: {
     if (!text) return;
     handlePromptClick(text);
     setInputValue('');
-  };
-
-  const handleComposeConfirm = () => {
-    const text = buildComposeIntent();
-    setInputValue(text);
-    setInputMode('keyboard');
-    setShowFactorDrawer(false);
   };
 
   const handleStopRecording = () => {
@@ -4565,6 +4605,12 @@ function ChatView({ agent, initialPrompt, onExit, onViewProfile, onBuyClick }: {
       ? ['推荐更多产品', '产品评价', '产品对比']
       : [];
   const isQuantModelDetail = agent.id === 'quant' && Boolean(activeQuantModel || showWuguEventFlow || showEventDrivenFlow);
+  const quantDetailTitle = showWuguEventFlow
+    ? '事件驱动选股模型'
+    : showEventDrivenFlow
+      ? '成长股模型'
+      : activeQuantModel ?? '';
+  const compactHeaderTitle = isQuantModelDetail ? quantDetailTitle : HOME_AGENT_ENTRY_LABELS[agent.id];
 
   return (
     <motion.div 
@@ -4572,29 +4618,68 @@ function ChatView({ agent, initialPrompt, onExit, onViewProfile, onBuyClick }: {
       className="absolute inset-0 z-50 flex flex-col bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-800 via-slate-900 to-slate-950"
     >
       {/* Always-visible Back Button */}
-      <div className="absolute top-0 left-0 right-0 z-50 px-6 pt-14 pb-3 flex items-center pointer-events-none">
-        <div className="h-11 flex items-center">
+      <div className={`absolute top-0 left-0 right-0 z-50 flex items-center justify-between pointer-events-none ${
+        isQuantModelDetail
+          ? 'px-4 pt-9 pb-2 bg-slate-900/92 backdrop-blur-xl border-b border-white/10 shadow-[0_8px_24px_rgba(15,23,42,0.35)]'
+          : agent.id === 'quant' && scrollY > 40
+            ? 'px-4 pt-9 pb-2 bg-slate-900/92 backdrop-blur-xl border-b border-white/10 shadow-[0_8px_24px_rgba(15,23,42,0.35)]'
+            : 'px-6 pt-10 pb-3'
+      }`}>
+        <div className="h-9 flex min-w-0 items-center gap-3">
           <button 
             onClick={() => {
               if (activeQuantModel) {
                 setActiveQuantModel(null);
+              } else if (showWuguEventFlow || showEventDrivenFlow) {
+                setShowWuguEventFlow(false);
+                setShowEventDrivenFlow(false);
               } else {
                 onExit();
               }
             }} 
-            className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-800/80 backdrop-blur-md border border-white/10 text-slate-300 hover:text-white transition-colors shadow-sm pointer-events-auto"
+            className="w-8 h-8 shrink-0 flex items-center justify-center rounded-full bg-slate-800/80 backdrop-blur-md border border-white/10 text-slate-300 hover:text-white transition-colors shadow-sm pointer-events-auto"
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
+          {isQuantModelDetail && (
+            <div className="min-w-0 text-base font-semibold leading-none text-slate-100 truncate">
+              {quantDetailTitle}
+            </div>
+          )}
+          {agent.id === 'quant' && !isQuantModelDetail && scrollY > 40 && (
+            <div className="min-w-0 text-base font-semibold leading-none text-slate-100 truncate">
+              {HOME_AGENT_ENTRY_LABELS[agent.id]}
+            </div>
+          )}
         </div>
+        {agent.id === 'quant' && (
+          <div className="flex h-9 shrink-0 items-center gap-2 pointer-events-auto">
+            <button
+              type="button"
+              onClick={() => setShowQuantHistoryDrawer(true)}
+              className="h-8 w-8 rounded-full border border-white/10 bg-slate-800/80 text-slate-300 shadow-sm backdrop-blur-md transition-colors hover:text-white"
+              aria-label="历史对话"
+            >
+              <History className="mx-auto h-4 w-4" />
+            </button>
+            <div className={`overflow-hidden transition-all duration-300 ${scrollY > 40 ? 'w-8 opacity-100' : 'w-0 opacity-0'}`}>
+              <img
+                src={agent.avatar}
+                className="h-8 w-8 rounded-full border border-white/10 object-cover shadow-sm"
+                referrerPolicy="no-referrer"
+                alt=""
+              />
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Compact Sticky Header (Fades in on scroll) */}
-      <header className={`absolute top-0 left-0 right-0 z-40 px-6 pt-14 pb-3 bg-slate-900/95 backdrop-blur-md border-b border-white/10 shadow-sm flex items-center justify-between transition-all duration-300 ${scrollY > 40 ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4 pointer-events-none'}`}>
+      <header className={`absolute top-0 left-0 right-0 z-40 px-6 pt-10 pb-3 bg-slate-900/95 backdrop-blur-md border-b border-white/10 shadow-sm flex items-center justify-between transition-all duration-300 ${agent.id !== 'quant' && !isQuantModelDetail && scrollY > 40 ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4 pointer-events-none'}`}>
         <div className="flex items-center gap-4">
           <div className="w-8 h-8 shrink-0"></div> {/* Spacer for back button */}
           <h2 className="font-bold text-slate-100 text-lg drop-shadow-md">
-            {HOME_AGENT_ENTRY_LABELS[agent.id]}
+            {compactHeaderTitle}
           </h2>
         </div>
         <div className="relative shrink-0 w-11 h-11">
@@ -4703,7 +4788,7 @@ function ChatView({ agent, initialPrompt, onExit, onViewProfile, onBuyClick }: {
         )}
 
         {/* Content Area */}
-        <div className={`px-4 space-y-4 relative z-20 ${isQuantModelDetail ? 'pt-20' : '-mt-4'}`}>
+        <div className={`px-4 space-y-4 relative z-20 ${isQuantModelDetail ? 'pt-16' : '-mt-4'}`}>
           
           {agent.id === 'wealth' && renderWealthContent()}
           {agent.id === 'advisor' && renderAdvisorContent()}
@@ -4744,105 +4829,11 @@ function ChatView({ agent, initialPrompt, onExit, onViewProfile, onBuyClick }: {
         </div>
       </main>
 
-      <AnimatePresence>
-        {showFactorDrawer && agent.id === 'quant' && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setShowFactorDrawer(false)}
-              className="absolute inset-0 z-40 bg-slate-950/55 backdrop-blur-[2px]"
-            />
-            <motion.div
-              initial={{ y: '105%' }}
-              animate={{ y: 0 }}
-              exit={{ y: '105%' }}
-              transition={{ duration: 0.24, ease: 'easeOut' }}
-              className="absolute left-0 right-0 bottom-0 z-50 max-h-[76%] overflow-y-auto rounded-t-[1.75rem] border-t border-blue-400/25 bg-slate-900/98 px-4 pb-32 pt-4 shadow-[0_-22px_46px_rgba(0,0,0,0.45)] scrollbar-hide"
-            >
-              <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-white/25" />
-              <div className="mb-4 flex items-start justify-between gap-3">
-                <div>
-                  <div className="text-base font-bold text-slate-100">自由组合筛选股票</div>
-                  <div className="mt-1 text-[11px] leading-relaxed text-slate-500">选股模型单选，原子能力和因子可多选；确认后写入输入框继续编辑。</div>
-                </div>
-                <button onClick={() => setShowFactorDrawer(false)} className="h-8 w-8 rounded-full bg-white/5 text-slate-400 hover:text-white">
-                  <X className="mx-auto h-4 w-4" />
-                </button>
-              </div>
-
-              <div className="space-y-4">
-                <div>
-                  <div className="mb-2 text-xs font-semibold text-slate-300">1. 选股模型</div>
-                  <div className="grid grid-cols-2 gap-2">
-                    {composeModels.map(model => (
-                      <button
-                        key={model}
-                        onClick={() => setSelectedComposeModel(model)}
-                        className={`rounded-xl border px-3 py-2 text-left text-xs transition-colors ${
-                          selectedComposeModel === model
-                            ? 'border-cyan-300/60 bg-cyan-400/15 text-cyan-100'
-                            : 'border-white/10 bg-slate-950/45 text-slate-400'
-                        }`}
-                      >
-                        {model}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <div className="mb-2 text-xs font-semibold text-slate-300">2. 原子模型</div>
-                  <div className="grid grid-cols-3 gap-2">
-                    {atomicModelOptions.map(option => (
-                      <button
-                        key={option}
-                        onClick={() => toggleMultiSelect(option, setSelectedAtomicModels)}
-                        className={`rounded-xl border px-2.5 py-2 text-left text-xs transition-colors ${
-                          selectedAtomicModels.includes(option)
-                            ? 'border-blue-300/55 bg-blue-400/15 text-blue-100'
-                            : 'border-white/10 bg-slate-950/45 text-slate-400'
-                        }`}
-                      >
-                        {option}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <div className="mb-2 text-xs font-semibold text-slate-300">3. 选股因子</div>
-                  <div className="grid grid-cols-2 gap-2">
-                    {stockFactorOptions.map(option => (
-                      <button
-                        key={option.value}
-                        onClick={() => toggleMultiSelect(option.value, setSelectedFactors)}
-                        className={`rounded-xl border px-3 py-2 text-left transition-colors ${
-                          selectedFactors.includes(option.value)
-                            ? 'border-indigo-300/55 bg-indigo-400/15'
-                            : 'border-white/10 bg-slate-950/45'
-                        }`}
-                      >
-                        <span className="block text-xs font-semibold text-slate-200">{option.title}</span>
-                        <span className="mt-1 block text-[10px] leading-snug text-slate-500">{option.desc}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <button
-                  onClick={handleComposeConfirm}
-                  disabled={!selectedComposeModel && selectedFactors.length === 0}
-                  className="w-full rounded-2xl bg-gradient-to-r from-cyan-400 to-blue-500 px-4 py-3 text-sm font-bold text-slate-950 shadow-lg shadow-blue-500/20 disabled:opacity-45"
-                >
-                  确定组合
-                </button>
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+      <QuantHistoryDrawer
+        isOpen={showQuantHistoryDrawer}
+        onClose={() => setShowQuantHistoryDrawer(false)}
+        onSelect={handlePromptClick}
+      />
 
       <AnimatePresence>
         {isRecording && (
@@ -4921,51 +4912,32 @@ function ChatView({ agent, initialPrompt, onExit, onViewProfile, onBuyClick }: {
           </button>
         ) : (
           <div className="bg-slate-800/90 backdrop-blur-2xl rounded-[2rem] p-2 border border-white/10 shadow-[0_10px_40px_rgba(0,0,0,0.5)] flex items-center gap-2 focus-within:border-blue-500/50 focus-within:shadow-[0_0_20px_rgba(59,130,246,0.2)] transition-all">
+            <button
+              onClick={() => setInputMode('voice')}
+              className="h-10 w-10 flex items-center justify-center rounded-full bg-slate-700/50 text-slate-400 hover:text-slate-200 transition-colors shrink-0"
+              aria-label="语音输入"
+            >
+              <Mic className="w-5 h-5" />
+            </button>
             <input
               type="text"
               value={inputValue}
-              onFocus={() => {
-                setInputMode('keyboard');
-                setShowFactorDrawer(false);
-              }}
+              onFocus={() => setInputMode('keyboard')}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') handleSendInput();
               }}
-              placeholder={agent.id === 'quant' ? '输入偏好，或点右侧自由组合编排' : '发消息或按住说话...'}
+              placeholder={agent.id === 'quant' ? '输入选股偏好' : '发消息或按住说话...'}
               className="bg-transparent text-sm outline-none w-full text-slate-200 placeholder:text-slate-500 py-2"
             />
-            {inputValue.trim() ? (
-              <button
-                onClick={handleSendInput}
-                className="h-10 w-10 rounded-full bg-gradient-to-r from-blue-600 to-cyan-600 flex items-center justify-center text-white shrink-0 shadow-md hover:from-blue-500 hover:to-cyan-500 transition-colors"
-                aria-label="发送"
-              >
-                <ArrowRight className="w-5 h-5" />
-              </button>
-            ) : (
-              <div className="flex items-center gap-2 shrink-0">
-                <button
-                  onClick={() => {
-                    setShowFactorDrawer(false);
-                    setInputMode('voice');
-                  }}
-                  className="h-10 w-10 flex items-center justify-center rounded-full bg-slate-700/50 text-slate-400 hover:text-slate-200 transition-colors"
-                  aria-label="语音输入"
-                >
-                  <Mic className="w-5 h-5" />
-                </button>
-                {agent.id === 'quant' && (
-                  <button
-                    onClick={() => setShowFactorDrawer(true)}
-                    className="h-10 w-10 flex items-center justify-center rounded-full bg-blue-500/15 border border-blue-400/20 text-cyan-300 hover:bg-blue-500/25 transition-colors"
-                    aria-label="自由组合选股编排"
-                  >
-                    <Filter className="w-5 h-5" />
-                  </button>
-                )}
-              </div>
-            )}
+            <button
+              onClick={handleSendInput}
+              disabled={!inputValue.trim()}
+              className="h-10 w-10 rounded-full bg-gradient-to-r from-blue-600 to-cyan-600 flex items-center justify-center text-white shrink-0 shadow-md transition-colors hover:from-blue-500 hover:to-cyan-500 disabled:from-slate-700 disabled:to-slate-700 disabled:text-slate-500 disabled:shadow-none"
+              aria-label="发送"
+            >
+              <ArrowRight className="w-5 h-5" />
+            </button>
           </div>
         )}
       </div>
