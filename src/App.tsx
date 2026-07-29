@@ -347,6 +347,12 @@ export default function App() {
     setCurrentView('chat');
   };
 
+  const handleHomeAskSubmit = (prompt: string) => {
+    setActiveAgent('quant');
+    setInitialPrompt(prompt);
+    setCurrentView('chat');
+  };
+
   const handleViewProfile = (advisorId: string) => {
     setSelectedAdvisorId(advisorId);
     setCurrentView('advisorProfile');
@@ -370,12 +376,19 @@ export default function App() {
 
         <AnimatePresence mode="wait">
           {currentView === 'home' && (
-            <HomeView onAgentClick={handleAgentClick} onTradeClick={() => setCurrentView('trade')} onBuyClick={handleGoToBuy} onWatchlistClick={() => setCurrentView('watchlist')} onOpenDrawer={() => setShowDrawer(true)} />
+            <HomeView
+              onAgentClick={handleAgentClick}
+              onTradeClick={() => setCurrentView('trade')}
+              onBuyClick={handleGoToBuy}
+              onWatchlistClick={() => setCurrentView('watchlist')}
+              onOpenDrawer={() => setShowDrawer(true)}
+            />
           )}
           {currentView === 'trade' && (
             <TradeView
               onBack={() => setCurrentView('home')}
               onBuy={handleGoToBuy}
+              onAskSubmit={handleHomeAskSubmit}
             />
           )}
           {currentView === 'tradeBuy' && (
@@ -1066,6 +1079,122 @@ function QuantHistoryDrawer({ isOpen, onClose, onSelect }: { isOpen: boolean; on
         </>
       )}
     </AnimatePresence>
+  );
+}
+
+function TechAskOrb({ className = '' }: { className?: string }) {
+  return (
+    <div className={`relative flex items-center justify-center ${className}`}>
+      <motion.div
+        className="absolute inset-0 rounded-full border border-cyan-300/40"
+        animate={{ rotate: 360, scale: [1, 1.04, 1] }}
+        transition={{ rotate: { duration: 9, repeat: Infinity, ease: 'linear' }, scale: { duration: 2.4, repeat: Infinity } }}
+      />
+      <motion.div
+        className="absolute inset-1 rounded-full border border-blue-400/35 border-dashed"
+        animate={{ rotate: -360 }}
+        transition={{ duration: 12, repeat: Infinity, ease: 'linear' }}
+      />
+      <motion.div
+        className="absolute inset-2 rounded-full bg-[conic-gradient(from_120deg,rgba(56,189,248,0.18),rgba(99,102,241,0.72),rgba(34,211,238,0.28),rgba(56,189,248,0.18))] blur-[1px]"
+        animate={{ rotate: 360 }}
+        transition={{ duration: 6, repeat: Infinity, ease: 'linear' }}
+      />
+      <div className="absolute inset-3 rounded-full bg-slate-950/80 shadow-[inset_0_0_22px_rgba(56,189,248,0.38),0_0_28px_rgba(37,99,235,0.35)]" />
+      <motion.div
+        className="relative flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 via-cyan-400 to-indigo-500 text-white shadow-[0_0_26px_rgba(56,189,248,0.45)]"
+        animate={{ y: [0, -2, 0] }}
+        transition={{ duration: 1.8, repeat: Infinity }}
+      >
+        <Sparkles className="h-6 w-6" />
+      </motion.div>
+    </div>
+  );
+}
+
+function HomeAskView({ onBack, onAskQuant }: { onBack: () => void; onAskQuant: () => void }) {
+  const [askText, setAskText] = useState('');
+  const questions = [
+    '大盘走势怎么样？',
+    '近期有哪些投资热点？',
+    '主力加仓哪些板块？',
+  ];
+  const handleSend = () => {
+    if (!askText.trim()) return;
+    onAskQuant();
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: 20 }}
+      className="absolute inset-0 z-40 flex flex-col overflow-hidden bg-[radial-gradient(circle_at_20%_10%,rgba(37,99,235,0.24),transparent_34%),radial-gradient(circle_at_85%_22%,rgba(8,145,178,0.18),transparent_30%),linear-gradient(180deg,#0f172a_0%,#020617_100%)] text-slate-100"
+    >
+      <div className="absolute inset-0 opacity-[0.12] [background-image:linear-gradient(rgba(148,163,184,0.18)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,184,0.18)_1px,transparent_1px)] [background-size:18px_18px]" />
+      <header className="relative z-10 flex items-center justify-between border-b border-white/10 bg-slate-900/80 px-5 pb-3 pt-10 shadow-sm backdrop-blur-xl">
+        <button onClick={onBack} className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-slate-800/80 text-slate-300 shadow-sm">
+          <ChevronLeft className="h-5 w-5" />
+        </button>
+        <div className="text-sm font-semibold text-slate-100">智能问答</div>
+        <div className="h-9 w-9" />
+      </header>
+
+      <main className="relative z-10 flex-1 overflow-y-auto px-4 pb-28 scrollbar-hide">
+        <div className="pt-4 text-center text-[11px] font-medium text-slate-600">下午 3:47</div>
+
+        <div className="relative mt-5 overflow-hidden rounded-3xl border border-blue-400/18 bg-slate-900/58 px-4 py-4 pl-[112px] shadow-[0_18px_42px_rgba(2,6,23,0.34)] backdrop-blur-xl">
+          <div className="absolute -left-2 bottom-0 h-[126px] w-[108px] overflow-hidden">
+            <img src={产品买手头像} className="h-full w-full object-cover object-top opacity-95" alt="" />
+          </div>
+          <div className="absolute right-3 top-3 h-12 w-12 rounded-full border border-blue-300/20 opacity-60" />
+          <div className="absolute right-0 bottom-0 h-24 w-24 rounded-full bg-blue-500/10 blur-2xl" />
+          <p className="relative text-sm font-semibold leading-relaxed text-slate-200">
+            市场前沿动态已同步，大盘研判、热点追踪、主力资金行业榜单一键可查，即刻开启查询吧。
+          </p>
+        </div>
+
+        <div className="mt-5 space-y-2.5">
+          {questions.map((question, index) => (
+            <motion.button
+              key={question}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.12 + index * 0.08 }}
+              onClick={onAskQuant}
+              className="flex w-fit max-w-[92%] items-center gap-2 rounded-2xl border border-white/10 bg-slate-800/62 px-3.5 py-2.5 text-left text-sm font-medium leading-snug text-slate-200 shadow-md backdrop-blur-xl transition-colors hover:border-blue-400/30 hover:bg-slate-700/70"
+            >
+              <Sparkles className="h-4 w-4 shrink-0 text-sky-400" />
+              {question}
+            </motion.button>
+          ))}
+        </div>
+      </main>
+
+      <div className="absolute bottom-6 left-4 right-4 z-20 rounded-[2rem] border border-white/10 bg-slate-800/92 p-2 shadow-[0_12px_40px_rgba(0,0,0,0.45)] backdrop-blur-2xl">
+        <div className="flex items-center gap-2">
+          <button className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-700/60 text-slate-400">
+            <Mic className="h-5 w-5" />
+          </button>
+          <input
+            value={askText}
+            onChange={(event) => setAskText(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') handleSend();
+            }}
+            placeholder="问问市场、热点、主力资金..."
+            className="min-w-0 flex-1 bg-transparent py-2 text-sm text-slate-100 outline-none placeholder:text-slate-500"
+          />
+          <button
+            onClick={handleSend}
+            disabled={!askText.trim()}
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-600 text-white transition-opacity disabled:opacity-35"
+          >
+            <ArrowRight className="h-5 w-5" />
+          </button>
+        </div>
+      </div>
+    </motion.div>
   );
 }
 
@@ -3023,7 +3152,6 @@ type QuantAnswerStock = {
   netProfit: string;
   score: string;
   reason: string;
-  quickMetrics: { label: string; value: string; tone?: 'blue' | 'red' | 'emerald' | 'amber' }[];
   factorScores: { title: string; score: number; desc: string }[];
   factorMetrics: { label: string; value: string; tone?: 'blue' | 'red' | 'emerald' | 'amber' }[];
 };
@@ -3117,10 +3245,6 @@ const QUANT_ANSWER_STOCKS: QuantAnswerStock[] = [
     netProfit: '10.8亿',
     score: '91',
     reason: '半导体刻蚀设备龙头，处于22个核心新兴产业白名单首位。研发费用率高达18%，净利润同比增速42%，属于典型的高弹性硬科技成长股。',
-    quickMetrics: [
-      { label: 'ROE', value: '16.2%', tone: 'blue' },
-      { label: '股息', value: '0.8%', tone: 'emerald' },
-    ],
     factorScores: [
       { title: '产业景气度维度', score: 97, desc: '半导体设备自主可控核心白名单，订单加速释放' },
       { title: '成长维度', score: 94, desc: '研发投入比重超18%，营收利润加速，PEG < 0.9' },
@@ -3151,10 +3275,6 @@ const QUANT_ANSWER_STOCKS: QuantAnswerStock[] = [
     netProfit: '168.2亿',
     score: '94',
     reason: '全球动力电池龙头，盈利质量较高，现金流利润比1.35，成长速度与加速度共振。PEG仅0.72且主力大单建仓迹象明显。',
-    quickMetrics: [
-      { label: 'ROE', value: '18.8%', tone: 'blue' },
-      { label: 'PEG', value: '0.72', tone: 'blue' },
-    ],
     factorScores: [
       { title: '产业景气度维度', score: 95, desc: '新能源电池需求修复，产业链订单边际改善' },
       { title: '成长维度', score: 96, desc: '利润增速和现金流同步改善，成长质量较高' },
@@ -3181,64 +3301,53 @@ function QuantFreeStockResultCard({ stock, matchedModel, onBuyClick }: { key?: R
   };
   const isPositive = stock.change.startsWith('+');
   const primaryMetrics = matchedModel ? stock.factorMetrics.slice(1, 4) : [
-    { label: '5日涨幅', value: stock.gain5d, tone: 'red' as const },
-    { label: '净利润', value: stock.netProfit, tone: 'blue' as const },
-    { label: '同比增长', value: stock.factorMetrics[1]?.value ?? '+42.1%', tone: 'emerald' as const },
+    { label: '5日涨跌幅', value: stock.gain5d, tone: isPositive ? 'red' as const : 'emerald' as const },
+    { label: '市值', value: stock.marketCap, tone: 'blue' as const },
+    { label: '成交量', value: stock.volume, tone: 'blue' as const },
   ];
 
   return (
-    <div className="rounded-[1.4rem] border border-blue-400/18 bg-[radial-gradient(circle_at_top_left,rgba(37,99,235,0.18),transparent_34%),linear-gradient(145deg,rgba(15,23,42,0.92),rgba(17,24,39,0.72))] p-4 shadow-[0_18px_44px_rgba(2,6,23,0.34)]">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <div className="flex items-center gap-2">
-            <span className="text-xl font-bold leading-none text-slate-50">{stock.name}</span>
-            <span className="rounded-md bg-slate-700/65 px-2 py-1 text-xs font-semibold tracking-wide text-slate-400">{stock.code}</span>
-          </div>
-          <div className="mt-2 text-[11px] leading-relaxed text-slate-500">
-            股票名称：{stock.name}；股票代码：{stock.code}；股票价格：¥{stock.price}；涨跌幅：{stock.change}；5 日涨跌幅：{stock.gain5d}；市值：{stock.marketCap}；成交量：{stock.volume}
+    <div className="group relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-slate-800/60 to-slate-800/40 p-4 shadow-[0_8px_32px_rgba(0,0,0,0.3)] backdrop-blur-xl transition-all hover:border-blue-500/30 hover:shadow-[0_8px_32px_rgba(59,130,246,0.15)]">
+      <div className={`pointer-events-none absolute right-0 top-0 h-32 w-32 rounded-full blur-3xl ${isPositive ? 'bg-red-500/5' : 'bg-emerald-500/5'}`} />
+
+      <div className="relative z-10 mb-3 flex items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-2">
+          <div className="h-5 w-1 rounded-full bg-gradient-to-b from-blue-400 to-blue-600" />
+          <div className="flex min-w-0 items-baseline gap-2">
+            <span className="truncate text-lg font-bold text-slate-100">{stock.name}</span>
+            <span className="shrink-0 text-xs font-mono text-slate-500">{stock.code}</span>
           </div>
         </div>
-        <div className="shrink-0 text-right">
-          <div className="text-lg font-bold tabular-nums text-slate-50">¥{stock.price}</div>
-          <div className={`mt-2 text-base font-bold tabular-nums ${isPositive ? 'text-red-400' : 'text-emerald-400'}`}>{stock.change}</div>
+        <div className="flex shrink-0 items-center gap-2">
+          <span className={`text-sm font-semibold tabular-nums ${isPositive ? 'text-red-400' : 'text-emerald-400'}`}>{stock.price}</span>
+          <span className={`text-sm font-bold tabular-nums ${isPositive ? 'text-red-400' : 'text-emerald-400'}`}>{stock.change}</span>
         </div>
       </div>
 
-      <div className="mt-3 inline-flex rounded-lg bg-blue-500/15 px-3 py-1.5 text-xs font-semibold text-blue-100">
-        {stock.industry}
-      </div>
-
-      <div className="mt-4 grid grid-cols-3 overflow-hidden rounded-2xl border border-white/10 bg-slate-950/22">
+      <div className="relative z-10 mb-3 grid grid-cols-3 overflow-hidden rounded-xl border border-white/5 bg-slate-900/35">
         {primaryMetrics.map((metric, index) => (
-          <div key={`${metric.label}-${index}`} className={`px-2 py-3 text-center ${index > 0 ? 'border-l border-white/10' : ''}`}>
-            <div className={`text-lg font-bold tabular-nums ${metricToneClass[metric.tone ?? 'blue']}`}>{metric.value}</div>
-            <div className="mt-1 text-[10px] text-slate-500">{metric.label}</div>
+          <div key={`${metric.label}-${index}`} className={`px-2 py-2.5 text-center ${index > 0 ? 'border-l border-white/5' : ''}`}>
+            <div className={`text-base font-bold tabular-nums ${metricToneClass[metric.tone ?? 'blue']}`}>{metric.value}</div>
+            <div className="mt-0.5 text-[10px] leading-tight text-slate-500">{metric.label}</div>
           </div>
         ))}
       </div>
 
-      <div className="mt-4 rounded-2xl border border-blue-400/24 bg-blue-500/6 px-3.5 py-3">
+      <div className="relative z-10 mb-3">
         <ReasonHeaderWithRadar
           score={stock.score}
           reasonSummary={stock.reason}
           modelName={matchedModel?.name}
           radarConfig={radarConfig}
-          labelClassName="rounded border border-amber-400/50 bg-amber-500/10 px-2.5 py-1 text-xs font-bold text-amber-300 inline-flex"
         >
           <p className="text-xs leading-relaxed text-slate-300">{stock.reason}</p>
         </ReasonHeaderWithRadar>
       </div>
 
-      <div className="mt-4 flex items-center justify-between gap-3">
-        <div className="flex min-w-0 flex-wrap gap-x-4 gap-y-1 text-[11px] text-slate-400">
-          {stock.quickMetrics.map(metric => (
-            <span key={metric.label}>
-              {metric.label} <span className={`font-bold ${metricToneClass[metric.tone ?? 'blue']}`}>{metric.value}</span>
-            </span>
-          ))}
-        </div>
-        <button onClick={onBuyClick} className="shrink-0 rounded-full border border-blue-400/40 bg-blue-500/15 px-5 py-2 text-sm font-semibold text-blue-100 shadow-[0_10px_24px_rgba(37,99,235,0.16)]">
-          买股票
+      <div className="flex justify-center">
+        <button onClick={onBuyClick} className="relative z-10 flex h-[36px] w-[60%] items-center justify-center gap-1.5 rounded-full border border-blue-500/30 bg-blue-500/15 text-[13px] font-medium tracking-wide text-blue-100 shadow-[0_4px_20px_rgba(59,130,246,0.15)] transition-all active:scale-95">
+          买入
+          <ArrowUpRight className="h-3.5 w-3.5 text-blue-300" />
         </button>
       </div>
     </div>
@@ -4604,12 +4713,8 @@ function ChatView({
   const [inputMode, setInputMode] = useState<'keyboard' | 'voice'>('keyboard');
   const [isRecording, setIsRecording] = useState(false);
   const [toastText, setToastText] = useState('');
-  const displayedQuantHomeCardIndexes = React.useMemo(() => {
-    const allIndexes = [0, 1, 2, 3, 4, 5, 6];
-    if (backupMode) return allIndexes;
-    return [...allIndexes].sort(() => Math.random() - 0.5).slice(0, 3);
-  }, [backupMode]);
-  const showQuantModelCard = useCallback((index: number) => displayedQuantHomeCardIndexes.includes(index), [displayedQuantHomeCardIndexes]);
+  const initialPromptSentRef = React.useRef(false);
+  const displayedQuantHomeCardIndexes = React.useMemo(() => [0, 1, 2, 3, 4, 5, 6], []);
 
   const showToast = (text: string) => {
     setToastText(text);
@@ -4731,6 +4836,18 @@ function ChatView({
     ]);
     scrollToLatestChatOutput();
   };
+
+  React.useEffect(() => {
+    const shouldAutoAsk = agent.id === 'quant'
+      && Boolean(initialPrompt)
+      && initialPrompt !== '成长股模型'
+      && initialPrompt !== '钨矿涨价事件'
+      && !initialPromptSentRef.current;
+    if (!shouldAutoAsk || !initialPrompt) return;
+    initialPromptSentRef.current = true;
+    const timer = window.setTimeout(() => handlePromptClick(initialPrompt), 220);
+    return () => window.clearTimeout(timer);
+  }, [agent.id, initialPrompt]);
 
   const handleSendInput = () => {
     const text = inputValue.trim();
@@ -4982,7 +5099,7 @@ function ChatView({
         >
           
           {/* Card 1: 趋势跟随模型 */}
-          <div className={`${showQuantModelCard(0) ? 'flex' : 'hidden'} w-[250px] sm:w-[280px] shrink-0 snap-center bg-slate-800/60 backdrop-blur-xl rounded-2xl border border-white/10 shadow-lg flex-col overflow-hidden`}>
+          <div className="flex w-[250px] sm:w-[280px] shrink-0 snap-center bg-slate-800/60 backdrop-blur-xl rounded-2xl border border-white/10 shadow-lg flex-col overflow-hidden">
             <div className="p-4 border-b border-white/5 bg-gradient-to-r from-blue-900/30 to-transparent relative overflow-hidden">
               <TrendingUp className="absolute right-[-10px] bottom-[-10px] w-24 h-24 text-blue-500/10" />
               <div className="relative z-10 flex items-center gap-3 mb-2">
@@ -5039,7 +5156,7 @@ function ChatView({
           </div>
 
           {/* Card 2: 成长股模型 */}
-          <div className={`${showQuantModelCard(1) ? 'flex' : 'hidden'} w-[250px] sm:w-[280px] shrink-0 snap-center bg-slate-800/60 backdrop-blur-xl rounded-2xl border border-white/10 shadow-lg flex-col overflow-hidden`}>
+          <div className="flex w-[250px] sm:w-[280px] shrink-0 snap-center bg-slate-800/60 backdrop-blur-xl rounded-2xl border border-white/10 shadow-lg flex-col overflow-hidden">
             <div className="p-4 border-b border-white/5 bg-gradient-to-r from-indigo-900/30 to-transparent relative overflow-hidden">
               <Sprout className="absolute right-[-10px] bottom-[-10px] w-24 h-24 text-indigo-500/10" />
               <div className="relative z-10 flex items-center gap-3 mb-2">
@@ -5090,7 +5207,7 @@ function ChatView({
           </div>
 
           {/* Card 3: 短线强势模型 */}
-          <div className={`${showQuantModelCard(2) ? 'flex' : 'hidden'} w-[250px] sm:w-[280px] shrink-0 snap-center bg-slate-800/60 backdrop-blur-xl rounded-2xl border border-white/10 shadow-lg flex-col overflow-hidden`}>
+          <div className="flex w-[250px] sm:w-[280px] shrink-0 snap-center bg-slate-800/60 backdrop-blur-xl rounded-2xl border border-white/10 shadow-lg flex-col overflow-hidden">
             <div className="p-4 border-b border-white/5 bg-gradient-to-r from-sky-900/30 to-transparent relative overflow-hidden">
               <Activity className="absolute right-[-10px] bottom-[-10px] w-24 h-24 text-sky-500/10" />
               <div className="relative z-10 flex items-center gap-3 mb-2">
@@ -5141,7 +5258,7 @@ function ChatView({
           </div>
 
           {/* Card 4: 高股息低波动模型 */}
-          <div className={`${showQuantModelCard(3) ? 'flex' : 'hidden'} w-[250px] sm:w-[280px] shrink-0 snap-center bg-slate-800/60 backdrop-blur-xl rounded-2xl border border-white/10 shadow-lg flex-col overflow-hidden`}>
+          <div className="flex w-[250px] sm:w-[280px] shrink-0 snap-center bg-slate-800/60 backdrop-blur-xl rounded-2xl border border-white/10 shadow-lg flex-col overflow-hidden">
             <div className="p-4 border-b border-white/5 bg-gradient-to-r from-cyan-900/30 to-transparent relative overflow-hidden">
               <Shield className="absolute right-[-10px] bottom-[-10px] w-24 h-24 text-cyan-500/10" />
               <div className="relative z-10 flex items-center gap-3 mb-2">
@@ -5187,7 +5304,7 @@ function ChatView({
           </div>
 
           {/* Card 5: 低估值选股 */}
-          <div className={`${showQuantModelCard(4) ? 'flex' : 'hidden'} w-[250px] sm:w-[280px] shrink-0 snap-center bg-slate-800/60 backdrop-blur-xl rounded-2xl border border-white/10 shadow-lg flex-col overflow-hidden`}>
+          <div className="flex w-[250px] sm:w-[280px] shrink-0 snap-center bg-slate-800/60 backdrop-blur-xl rounded-2xl border border-white/10 shadow-lg flex-col overflow-hidden">
             <div className="p-4 border-b border-white/5 bg-gradient-to-r from-amber-900/30 to-transparent relative overflow-hidden">
               <PieChart className="absolute right-[-10px] bottom-[-10px] w-24 h-24 text-amber-500/10" />
               <div className="relative z-10 flex items-center gap-3 mb-2">
@@ -5213,7 +5330,7 @@ function ChatView({
           </div>
 
           {/* Card 6: 产业景气度选股 */}
-          <div className={`${showQuantModelCard(5) ? 'flex' : 'hidden'} w-[250px] sm:w-[280px] shrink-0 snap-center bg-slate-800/60 backdrop-blur-xl rounded-2xl border border-white/10 shadow-lg flex-col overflow-hidden`}>
+          <div className="flex w-[250px] sm:w-[280px] shrink-0 snap-center bg-slate-800/60 backdrop-blur-xl rounded-2xl border border-white/10 shadow-lg flex-col overflow-hidden">
             <div className="p-4 border-b border-white/5 bg-gradient-to-r from-red-900/30 to-transparent relative overflow-hidden">
               <Flame className="absolute right-[-10px] bottom-[-10px] w-24 h-24 text-red-500/10" />
               <div className="relative z-10 flex items-center gap-3 mb-2">
@@ -5256,7 +5373,7 @@ function ChatView({
           </div>
 
           {/* Card 7: 新兴产业+成长股模型 */}
-          <div className={`${showQuantModelCard(6) ? 'flex' : 'hidden'} w-[250px] sm:w-[280px] shrink-0 snap-center bg-slate-800/60 backdrop-blur-xl rounded-2xl border border-white/10 shadow-lg flex-col overflow-hidden`}>
+          <div className="flex w-[250px] sm:w-[280px] shrink-0 snap-center bg-slate-800/60 backdrop-blur-xl rounded-2xl border border-white/10 shadow-lg flex-col overflow-hidden">
             <div className="p-4 border-b border-white/5 bg-gradient-to-r from-indigo-900/30 to-transparent relative overflow-hidden">
               <Sprout className="absolute right-[-10px] bottom-[-10px] w-24 h-24 text-indigo-500/10" />
               <div className="relative z-10 flex items-center gap-3 mb-2">
@@ -5958,8 +6075,16 @@ function AdvisorProfileView({ profile, onBack }: { profile: AdvisorProfileData, 
 
 type AssetTypeTab = 'all' | 'stock' | 'fund' | 'bond';
 
-function TradeView({ onBack, onBuy }: { onBack: () => void; onBuy: () => void }) {
+function TradeView({ onBack, onBuy, onAskSubmit }: { onBack: () => void; onBuy: () => void; onAskSubmit: (prompt: string) => void }) {
   const [assetTypeTab, setAssetTypeTab] = useState<AssetTypeTab>('all');
+  const [tradeAskText, setTradeAskText] = useState('');
+
+  const handleTradeAskSend = () => {
+    const text = tradeAskText.trim();
+    if (!text) return;
+    onAskSubmit(text);
+    setTradeAskText('');
+  };
 
   const holdings: { name: string; symbol: string; marketValue: string; quantity: string; currentPrice: string; costPrice: string; pnl: string; pnlPercent: string; isPositive: boolean; type: 'stock' | 'fund' | 'bond' }[] = [
     { name: '中际旭创', symbol: '300308', marketValue: '150,800.00', quantity: '1,800', currentPrice: '83.78', costPrice: '71.00', pnl: '+23,204.00', pnlPercent: '+18.18%', isPositive: true, type: 'stock' },
@@ -5992,7 +6117,7 @@ function TradeView({ onBack, onBuy }: { onBack: () => void; onBuy: () => void })
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto scrollbar-hide pb-6">
+      <div className="flex-1 overflow-y-auto scrollbar-hide pb-24">
         <div className="px-4 py-4 space-y-6">
           {/* Total Asset Header */}
           <div className="flex justify-between items-end mb-1.5">
@@ -6143,6 +6268,26 @@ function TradeView({ onBack, onBuy }: { onBack: () => void; onBuy: () => void })
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      <div className="absolute bottom-6 left-4 right-4 z-20 rounded-[1.6rem] border border-white/10 bg-slate-900/86 p-2 shadow-[0_10px_32px_rgba(0,0,0,0.45)] backdrop-blur-2xl">
+        <div className="flex h-10 items-center gap-2 rounded-full bg-slate-800/70 px-3 border border-white/5">
+          <MessageCircle className="h-4 w-4 shrink-0 text-blue-400" />
+          <input
+            value={tradeAskText}
+            onChange={(event) => setTradeAskText(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') handleTradeAskSend();
+            }}
+            placeholder="问问持仓、交易机会"
+            className="min-w-0 flex-1 bg-transparent text-xs text-slate-200 outline-none placeholder:text-slate-500"
+          />
+          {tradeAskText.trim() && (
+            <button onClick={handleTradeAskSend} className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-600 text-white">
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          )}
         </div>
       </div>
     </motion.div>
